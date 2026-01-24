@@ -1,20 +1,49 @@
+export type { SlideMode } from "./typography";
+
 export {
   HeroTitle,
   SectionHeader,
+  CategoryLabel,
+  TechCode,
+  SectionMarker,
   Eyebrow,
   MonoText,
+  BodyText,
   Quote,
   SlideNumber,
   ListItem,
+  PipeList,
+  Label,
 } from "./typography";
 
 export {
-  CornerBrackets,
-  Divider,
   SlideContainer,
+  Divider,
   TwoColumnLayout,
   GridSection,
   CenterContent,
+  Container,
+  HeaderBar,
 } from "./layout";
 
-export { FeatureCard, StatCard, QuoteCard } from "./cards";
+export {
+  FeatureCard,
+  StatCard,
+  QuoteCard,
+  InfoCard,
+  ProcessCard,
+} from "./cards";
+
+export type { IconSymbol } from "./decorative";
+
+export {
+  IndustrialIcon,
+  IconRow,
+  LogoMark,
+  NavLink,
+  MenuIcon,
+  CategoryGrid,
+  FeatureBlock,
+  WireframeBox,
+  IsometricGrid,
+} from "./decorative";

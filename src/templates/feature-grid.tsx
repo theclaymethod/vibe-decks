@@ -4,6 +4,7 @@ import {
   FeatureCard,
   Eyebrow,
   SectionHeader,
+  type SlideMode,
 } from "@/design-system";
 
 interface Feature {
@@ -17,7 +18,7 @@ interface FeatureGridTemplateProps {
   title: string;
   features: Feature[];
   columns?: 2 | 3 | 4;
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function FeatureGridTemplate({
@@ -25,24 +26,14 @@ export function FeatureGridTemplate({
   title,
   features,
   columns = 3,
-  variant = "light",
+  mode = "white",
 }: FeatureGridTemplateProps) {
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
         <div className="mb-10">
-          {eyebrow && (
-            <Eyebrow
-              className="text-[14px]"
-              style={{ color: "var(--color-primary)" }}
-            >
-              {eyebrow}
-            </Eyebrow>
-          )}
-          <SectionHeader
-            className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
-          >
+          {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+          <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
             {title}
           </SectionHeader>
         </div>
@@ -55,6 +46,7 @@ export function FeatureGridTemplate({
                 icon={feature.icon}
                 title={feature.title}
                 description={feature.description}
+                className="cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
               />
             ))}
           </GridSection>

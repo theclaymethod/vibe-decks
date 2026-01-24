@@ -3,6 +3,7 @@ import {
   Eyebrow,
   SectionHeader,
   MonoText,
+  type SlideMode,
 } from "@/design-system";
 
 interface StackedCard {
@@ -17,7 +18,7 @@ interface StackedCardsTemplateProps {
   title: string;
   subtitle?: string;
   cards: StackedCard[];
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function StackedCardsTemplate({
@@ -25,17 +26,17 @@ export function StackedCardsTemplate({
   title,
   subtitle,
   cards,
-  variant = "cream",
+  mode = "white",
 }: StackedCardsTemplateProps) {
-  const isLight = variant === "light" || variant === "cream";
+  const isLight = mode === "white" || mode === "yellow";
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex">
         <div className="w-1/3 flex flex-col justify-center pr-8">
           {eyebrow && (
             <Eyebrow
-              className="text-[14px]"
+              className="text-[20px]"
               style={{ color: "var(--color-primary)" }}
             >
               {eyebrow}
@@ -66,7 +67,7 @@ export function StackedCardsTemplate({
             {cards.map((card, i) => (
               <div
                 key={i}
-                className="absolute p-6 shadow-lg"
+                className="absolute p-6 shadow-lg cursor-pointer transition-all duration-300 hover:z-50 hover:-translate-y-2 hover:shadow-2xl"
                 style={{
                   backgroundColor: isLight ? "#fff" : "rgba(255,255,255,0.05)",
                   border: `1px solid ${isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"}`,
@@ -78,7 +79,7 @@ export function StackedCardsTemplate({
                 }}
               >
                 <div
-                  className="text-[12px] uppercase tracking-[0.15em] mb-2"
+                  className="text-[18px] uppercase tracking-[0.15em] mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
                     color: card.color || "var(--color-primary)",
@@ -87,7 +88,7 @@ export function StackedCardsTemplate({
                   {card.label}
                 </div>
                 <h3
-                  className="text-[24px]"
+                  className="text-[36px]"
                   style={{
                     fontFamily: "var(--font-heading)",
                     color: isLight

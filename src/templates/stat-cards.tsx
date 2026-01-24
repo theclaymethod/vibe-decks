@@ -1,9 +1,9 @@
 import {
   SlideContainer,
-  CornerBrackets,
   Eyebrow,
   SectionHeader,
-  MonoText,
+  StatCard,
+  type SlideMode,
 } from "@/design-system";
 
 interface Stat {
@@ -17,7 +17,7 @@ interface StatCardsTemplateProps {
   title: string;
   stats: Stat[];
   accentIndex?: number;
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function StatCardsTemplate({
@@ -25,61 +25,27 @@ export function StatCardsTemplate({
   title,
   stats,
   accentIndex = 1,
-  variant = "light",
+  mode = "white",
 }: StatCardsTemplateProps) {
   return (
-    <SlideContainer variant={variant}>
-      <div className="h-full flex flex-col p-8">
-        <div className="mb-8">
-          {eyebrow && (
-            <Eyebrow
-              className="text-[14px]"
-              style={{ color: "var(--color-primary)" }}
-            >
-              {eyebrow}
-            </Eyebrow>
-          )}
-          <SectionHeader
-            className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
-          >
+    <SlideContainer mode={mode}>
+      <div className="h-full flex flex-col">
+        <div className="mb-10">
+          {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+          <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
             {title}
           </SectionHeader>
         </div>
 
-        <div className="flex-1 flex items-center justify-around">
+        <div className="flex-1 flex items-center justify-around gap-8">
           {stats.map((stat, i) => (
-            <CornerBrackets key={i}>
-              <div className="text-center p-8 min-w-[200px]">
-                <div
-                  className="font-light"
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    fontSize: "clamp(4rem, 8vw, 6rem)",
-                    color:
-                      i === accentIndex
-                        ? "var(--color-primary)"
-                        : "var(--color-text-primary)",
-                  }}
-                >
-                  {stat.value}
-                </div>
-                <MonoText
-                  className="text-base uppercase tracking-widest mt-4 block"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  {stat.label}
-                </MonoText>
-                {stat.sublabel && (
-                  <MonoText
-                    className="text-sm mt-1 block"
-                    style={{ color: "#999" }}
-                  >
-                    {stat.sublabel}
-                  </MonoText>
-                )}
-              </div>
-            </CornerBrackets>
+            <StatCard
+              key={i}
+              value={stat.value}
+              label={stat.label}
+              sublabel={stat.sublabel}
+              className="flex-1 cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
+            />
           ))}
         </div>
       </div>

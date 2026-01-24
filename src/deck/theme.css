@@ -1,22 +1,63 @@
 :root {
-  --color-primary: #ff6e41;
-  --color-primary-dark: #e55a30;
+  --color-black: #0A0A0A;
+  --color-white: #FFFFFF;
+  --color-yellow: #FCD94B;
+  --color-yellow-muted: #D4B83F;
 
-  --color-bg-light: #ffffff;
-  --color-bg-dark: #1a1a1a;
-  --color-bg-cream: #fcfbf7;
+  --color-text-primary: var(--color-black);
+  --color-text-secondary: #333333;
+  --color-text-muted: #666666;
+  --color-text-inverse: var(--color-white);
 
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #555555;
-  --color-text-muted: #777777;
-  --color-text-inverse: #ffffff;
+  --color-bg-primary: var(--color-white);
+  --color-bg-secondary: #F5F5F5;
+  --color-border: var(--color-black);
+  --color-border-light: #333333;
 
-  --color-border: rgba(0, 0, 0, 0.1);
-  --color-border-light: rgba(255, 255, 255, 0.1);
-
-  --font-heading: 'Playfair Display', serif;
-  --font-body: 'IBM Plex Mono', monospace;
+  --font-heading: 'Bebas Neue', 'Impact', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 
   --slide-padding: 64px;
   --slide-gap: 48px;
+
+  --border-thin: 1px;
+  --border-medium: 2px;
+  --border-thick: 3px;
+  --border-heavy: 4px;
+
+  --radius-none: 0;
+}
+
+[data-slide-mode="dark"] {
+  --color-bg-primary: var(--color-black);
+  --color-bg-secondary: #1A1A1A;
+  --color-text-primary: var(--color-white);
+  --color-text-secondary: #CCCCCC;
+  --color-text-muted: #888888;
+  --color-text-inverse: var(--color-black);
+  --color-border: var(--color-white);
+  --color-border-light: #444444;
+}
+
+[data-slide-mode="yellow"] {
+  --color-bg-primary: var(--color-yellow);
+  --color-bg-secondary: #E6C200;
+  --color-text-primary: var(--color-black);
+  --color-text-secondary: #1A1A1A;
+  --color-text-muted: #333333;
+  --color-text-inverse: var(--color-yellow);
+  --color-border: var(--color-black);
+  --color-border-light: #333333;
+}
+
+[data-slide-mode="white"] {
+  --color-bg-primary: var(--color-white);
+  --color-bg-secondary: #F5F5F5;
+  --color-text-primary: var(--color-black);
+  --color-text-secondary: #333333;
+  --color-text-muted: #666666;
+  --color-text-inverse: var(--color-white);
+  --color-border: var(--color-black);
+  --color-border-light: #CCCCCC;
 }

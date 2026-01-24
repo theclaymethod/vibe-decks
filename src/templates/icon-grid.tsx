@@ -1,4 +1,4 @@
-import { SlideContainer, Eyebrow, SectionHeader, MonoText } from "@/design-system";
+import { SlideContainer, Eyebrow, SectionHeader, MonoText, type SlideMode } from "@/design-system";
 
 interface IconItem {
   icon: React.ReactNode;
@@ -11,7 +11,7 @@ interface IconGridTemplateProps {
   title: string;
   items: IconItem[];
   columns?: 3 | 4 | 5 | 6;
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function IconGridTemplate({
@@ -19,7 +19,7 @@ export function IconGridTemplate({
   title,
   items,
   columns = 4,
-  variant = "light",
+  mode = "white",
 }: IconGridTemplateProps) {
   const colClass = {
     3: "grid-cols-3",
@@ -28,15 +28,15 @@ export function IconGridTemplate({
     6: "grid-cols-6",
   }[columns];
 
-  const isLight = variant === "light" || variant === "cream";
+  const isLight = mode === "white" || mode === "yellow";
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
         <div className="mb-10">
           {eyebrow && (
             <Eyebrow
-              className="text-[14px]"
+              className="text-[20px]"
               style={{ color: "var(--color-primary)" }}
             >
               {eyebrow}
@@ -55,7 +55,7 @@ export function IconGridTemplate({
             {items.map((item, idx) => (
               <div key={idx} className="text-center">
                 <div
-                  className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center text-3xl"
+                  className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center text-3xl cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg"
                   style={{
                     backgroundColor: isLight
                       ? "rgba(0,0,0,0.05)"
@@ -77,7 +77,7 @@ export function IconGridTemplate({
                 </MonoText>
                 {item.description && (
                   <MonoText
-                    className="text-[12px] mt-1 block"
+                    className="text-[18px] mt-1 block"
                     style={{
                       color: isLight
                         ? "var(--color-text-muted)"

@@ -1,63 +1,24 @@
 import { cn } from "@/lib/utils";
+import type { SlideMode } from "./typography";
 
-export function CornerBrackets({
+export function SlideContainer({
   children,
   className,
-  size = "md",
-  color = "rgba(0,0,0,0.2)",
+  mode = "white",
 }: {
   children: React.ReactNode;
   className?: string;
-  size?: "sm" | "md" | "lg";
-  color?: string;
+  mode?: SlideMode;
 }) {
-  const sizeClasses = {
-    sm: { bracket: "w-2 h-2", offset: "-top-1 -left-1 -right-1 -bottom-1" },
-    md: { bracket: "w-3 h-3", offset: "-top-2 -left-2 -right-2 -bottom-2" },
-    lg: { bracket: "w-4 h-4", offset: "-top-3 -left-3 -right-3 -bottom-3" },
-  };
-
-  const { bracket, offset } = sizeClasses[size];
-  const [topOffset, leftOffset, rightOffset, bottomOffset] = offset.split(" ");
-
   return (
-    <div className={cn("relative", className)}>
-      <div
-        className={cn(
-          "absolute border-t border-l",
-          bracket,
-          topOffset,
-          leftOffset
-        )}
-        style={{ borderColor: color }}
-      />
-      <div
-        className={cn(
-          "absolute border-t border-r",
-          bracket,
-          topOffset,
-          rightOffset
-        )}
-        style={{ borderColor: color }}
-      />
-      <div
-        className={cn(
-          "absolute border-b border-l",
-          bracket,
-          bottomOffset,
-          leftOffset
-        )}
-        style={{ borderColor: color }}
-      />
-      <div
-        className={cn(
-          "absolute border-b border-r",
-          bracket,
-          bottomOffset,
-          rightOffset
-        )}
-        style={{ borderColor: color }}
-      />
+    <div
+      className={cn("w-full h-full p-[64px] overflow-hidden relative", className)}
+      data-slide-mode={mode}
+      style={{
+        backgroundColor: "var(--color-bg-primary)",
+        color: "var(--color-text-primary)",
+      }}
+    >
       {children}
     </div>
   );
@@ -65,83 +26,22 @@ export function CornerBrackets({
 
 export function Divider({
   className,
-  showMarkers = false,
+  thickness = "thin",
 }: {
   className?: string;
-  showMarkers?: boolean;
+  thickness?: "thin" | "medium" | "thick";
 }) {
-  if (showMarkers) {
-    return (
-      <div className={cn("relative flex items-center", className)}>
-        <span
-          className="text-[10px] shrink-0"
-          style={{
-            fontFamily: "var(--font-body)",
-            color: "rgba(0,0,0,0.2)",
-          }}
-        >
-          +
-        </span>
-        <div
-          className="flex-1 h-px mx-2"
-          style={{ backgroundColor: "rgba(0,0,0,0.1)" }}
-        />
-        <span
-          className="text-[10px] shrink-0"
-          style={{
-            fontFamily: "var(--font-body)",
-            color: "rgba(0,0,0,0.2)",
-          }}
-        >
-          +
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={cn("h-px", className)}
-      style={{ backgroundColor: "rgba(0,0,0,0.1)" }}
-    />
-  );
-}
-
-export function SlideContainer({
-  children,
-  className,
-  variant = "light",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  variant?: "light" | "dark" | "cream" | "primary";
-}) {
-  const variantStyles = {
-    light: {
-      backgroundColor: "var(--color-bg-light)",
-      color: "var(--color-text-primary)",
-    },
-    dark: {
-      backgroundColor: "var(--color-bg-dark)",
-      color: "var(--color-text-inverse)",
-    },
-    cream: {
-      backgroundColor: "var(--color-bg-cream)",
-      color: "var(--color-text-primary)",
-    },
-    primary: {
-      backgroundColor: "var(--color-primary)",
-      color: "var(--color-text-inverse)",
-    },
+  const heightMap = {
+    thin: "h-px",
+    medium: "h-0.5",
+    thick: "h-1",
   };
 
   return (
     <div
-      className={cn("w-full h-full p-[64px] overflow-hidden", className)}
-      style={variantStyles[variant]}
-    >
-      {children}
-    </div>
+      className={cn(heightMap[thickness], "w-full", className)}
+      style={{ backgroundColor: "var(--color-border)" }}
+    />
   );
 }
 
@@ -150,25 +50,35 @@ export function TwoColumnLayout({
   right,
   className,
   ratio = "1:1",
+  gap = "lg",
 }: {
   left: React.ReactNode;
   right: React.ReactNode;
   className?: string;
   ratio?: "1:1" | "2:1" | "1:2" | "3:2" | "2:3";
+  gap?: "sm" | "md" | "lg" | "xl";
 }) {
   const ratioClasses = {
-    "1:1": "",
+    "1:1": "grid-cols-2",
     "2:1": "grid-cols-[2fr_1fr]",
     "1:2": "grid-cols-[1fr_2fr]",
     "3:2": "grid-cols-[3fr_2fr]",
     "2:3": "grid-cols-[2fr_3fr]",
   };
 
+  const gapClasses = {
+    sm: "gap-6",
+    md: "gap-8",
+    lg: "gap-12",
+    xl: "gap-16",
+  };
+
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-[48px] h-full",
+        "grid h-full",
         ratioClasses[ratio],
+        gapClasses[gap],
         className
       )}
     >
@@ -181,10 +91,12 @@ export function TwoColumnLayout({
 export function GridSection({
   children,
   columns = 2,
+  gap = "md",
   className,
 }: {
   children: React.ReactNode;
   columns?: 2 | 3 | 4;
+  gap?: "sm" | "md" | "lg";
   className?: string;
 }) {
   const colClasses = {
@@ -193,8 +105,14 @@ export function GridSection({
     4: "grid-cols-4",
   };
 
+  const gapClasses = {
+    sm: "gap-4",
+    md: "gap-6",
+    lg: "gap-8",
+  };
+
   return (
-    <div className={cn("grid gap-[24px]", colClasses[columns], className)}>
+    <div className={cn("grid", colClasses[columns], gapClasses[gap], className)}>
       {children}
     </div>
   );
@@ -215,6 +133,50 @@ export function CenterContent({
       )}
     >
       {children}
+    </div>
+  );
+}
+
+export function Container({
+  children,
+  className,
+  maxWidth = "lg",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
+}) {
+  const maxWidthClasses = {
+    sm: "max-w-2xl",
+    md: "max-w-4xl",
+    lg: "max-w-6xl",
+    xl: "max-w-7xl",
+    full: "max-w-full",
+  };
+
+  return (
+    <div className={cn("mx-auto w-full", maxWidthClasses[maxWidth], className)}>
+      {children}
+    </div>
+  );
+}
+
+export function HeaderBar({
+  left,
+  center,
+  right,
+  className,
+}: {
+  left?: React.ReactNode;
+  center?: React.ReactNode;
+  right?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-center justify-between", className)}>
+      <div className="flex-1">{left}</div>
+      {center && <div className="flex-shrink-0">{center}</div>}
+      <div className="flex-1 flex justify-end">{right}</div>
     </div>
   );
 }

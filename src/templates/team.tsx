@@ -3,6 +3,7 @@ import {
   Eyebrow,
   SectionHeader,
   MonoText,
+  type SlideMode,
 } from "@/design-system";
 
 interface TeamMember {
@@ -17,7 +18,7 @@ interface TeamTemplateProps {
   title: string;
   members: TeamMember[];
   columns?: 3 | 4 | 5 | 6;
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function TeamTemplate({
@@ -25,9 +26,9 @@ export function TeamTemplate({
   title,
   members,
   columns = 4,
-  variant = "light",
+  mode = "white",
 }: TeamTemplateProps) {
-  const isLight = variant === "light" || variant === "cream";
+  const isLight = mode === "white" || mode === "yellow";
 
   const colClass = {
     3: "grid-cols-3",
@@ -37,12 +38,12 @@ export function TeamTemplate({
   }[columns];
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
         <div className="mb-8">
           {eyebrow && (
             <Eyebrow
-              className="text-[14px]"
+              className="text-[20px]"
               style={{ color: "var(--color-primary)" }}
             >
               {eyebrow}
@@ -92,7 +93,7 @@ export function TeamTemplate({
               </div>
 
               <h3
-                className="text-[18px] transition-colors duration-300"
+                className="text-[26px] transition-colors duration-300 group-hover:[color:var(--color-primary)]"
                 style={{
                   fontFamily: "var(--font-heading)",
                   color: isLight

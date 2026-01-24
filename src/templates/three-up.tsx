@@ -1,9 +1,9 @@
 import {
   SlideContainer,
-  CornerBrackets,
   Eyebrow,
   SectionHeader,
   MonoText,
+  type SlideMode,
 } from "@/design-system";
 
 interface ThreeUpItem {
@@ -16,8 +16,7 @@ interface ThreeUpTemplateProps {
   eyebrow?: string;
   title?: string;
   items: [ThreeUpItem, ThreeUpItem, ThreeUpItem];
-  variant?: "light" | "dark" | "cream";
-  showBrackets?: boolean;
+  mode?: SlideMode;
   aspectRatio?: "square" | "portrait" | "landscape";
 }
 
@@ -25,11 +24,10 @@ export function ThreeUpTemplate({
   eyebrow,
   title,
   items,
-  variant = "light",
-  showBrackets = true,
+  mode = "white",
   aspectRatio = "portrait",
 }: ThreeUpTemplateProps) {
-  const isLight = variant === "light" || variant === "cream";
+  const isLight = mode === "white" || mode === "yellow";
 
   const aspectClass = {
     square: "aspect-square",
@@ -38,13 +36,13 @@ export function ThreeUpTemplate({
   }[aspectRatio];
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
         {(eyebrow || title) && (
           <div className="mb-8 text-center">
             {eyebrow && (
               <Eyebrow
-                className="text-[14px]"
+                className="text-[20px]"
                 style={{ color: "var(--color-primary)" }}
               >
                 {eyebrow}
@@ -53,7 +51,7 @@ export function ThreeUpTemplate({
             {title && (
               <SectionHeader
                 className="mt-2"
-                style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
+                style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}
               >
                 {title}
               </SectionHeader>
@@ -65,14 +63,16 @@ export function ThreeUpTemplate({
           <div className="grid grid-cols-3 gap-6 w-full max-w-5xl">
             {items.map((item, idx) => {
               const content = (
-                <div className="flex flex-col">
-                  <div
-                    className={`${aspectClass} bg-cover bg-center rounded-lg overflow-hidden`}
-                    style={{ backgroundImage: `url('${item.imageUrl}')` }}
-                  />
+                <div className="flex flex-col group cursor-pointer transition-transform duration-300 hover:-translate-y-1">
+                  <div className={`${aspectClass} rounded-lg overflow-hidden`}>
+                    <div
+                      className="w-full h-full bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                      style={{ backgroundImage: `url('${item.imageUrl}')` }}
+                    />
+                  </div>
                   <div className="mt-4 text-center">
                     <h3
-                      className="text-[18px]"
+                      className="text-[26px]"
                       style={{
                         fontFamily: "var(--font-heading)",
                         color: isLight
@@ -84,7 +84,7 @@ export function ThreeUpTemplate({
                     </h3>
                     {item.subtitle && (
                       <MonoText
-                        className="text-[14px] mt-1 block"
+                        className="text-[20px] mt-1 block"
                         style={{
                           color: isLight
                             ? "var(--color-text-muted)"
@@ -98,17 +98,7 @@ export function ThreeUpTemplate({
                 </div>
               );
 
-              return showBrackets ? (
-                <CornerBrackets
-                  key={idx}
-                  size="sm"
-                  color={isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.2)"}
-                >
-                  {content}
-                </CornerBrackets>
-              ) : (
-                <div key={idx}>{content}</div>
-              );
+              return <div key={idx}>{content}</div>;
             })}
           </div>
         </div>

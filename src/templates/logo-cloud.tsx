@@ -1,9 +1,9 @@
 import {
   SlideContainer,
-  CornerBrackets,
   Eyebrow,
   SectionHeader,
   MonoText,
+  type SlideMode,
 } from "@/design-system";
 import type { ReactNode } from "react";
 
@@ -19,8 +19,7 @@ interface LogoCloudTemplateProps {
   title: string;
   logos: LogoItem[];
   columns?: 3 | 4 | 5 | 6;
-  variant?: "light" | "dark" | "cream";
-  showBrackets?: boolean;
+  mode?: SlideMode;
   centered?: boolean;
 }
 
@@ -29,11 +28,10 @@ export function LogoCloudTemplate({
   title,
   logos,
   columns = 3,
-  variant = "light",
-  showBrackets = true,
+  mode = "white",
   centered = false,
 }: LogoCloudTemplateProps) {
-  const isLight = variant === "light" || variant === "cream";
+  const isLight = mode === "white" || mode === "yellow";
 
   const colClass = {
     3: "grid-cols-3",
@@ -46,12 +44,12 @@ export function LogoCloudTemplate({
   const rowClass = rows === 1 ? "grid-rows-1" : rows === 2 ? "grid-rows-2" : "grid-rows-3";
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
         <div className={centered ? "text-center mb-8" : "mb-8"}>
           {eyebrow && (
             <Eyebrow
-              className="text-[14px]"
+              className="text-[20px]"
               style={{ color: "var(--color-primary)" }}
             >
               {eyebrow}
@@ -59,7 +57,7 @@ export function LogoCloudTemplate({
           )}
           <SectionHeader
             className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
+            style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}
           >
             {title}
           </SectionHeader>
@@ -71,7 +69,7 @@ export function LogoCloudTemplate({
           {logos.map((logo, i) => {
             const content = (
               <div
-                className="w-40 h-24 flex flex-col items-center justify-center transition-all duration-300 grayscale hover:grayscale-0"
+                className="w-40 h-24 flex flex-col items-center justify-center transition-all duration-300 grayscale hover:grayscale-0 hover:scale-105 hover:shadow-md hover:-translate-y-1 cursor-pointer"
                 style={{
                   backgroundColor: isLight ? "#fff" : "rgba(255,255,255,0.05)",
                   border: `1px solid ${isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"}`,
@@ -105,7 +103,7 @@ export function LogoCloudTemplate({
                 )}
                 {logo.label && (
                   <MonoText
-                    className="text-[11px] mt-1"
+                    className="text-[16px] mt-1"
                     style={{
                       color: isLight
                         ? "var(--color-text-muted)"
@@ -118,17 +116,7 @@ export function LogoCloudTemplate({
               </div>
             );
 
-            return showBrackets ? (
-              <CornerBrackets
-                key={i}
-                size="sm"
-                color={isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"}
-              >
-                {content}
-              </CornerBrackets>
-            ) : (
-              <div key={i}>{content}</div>
-            );
+            return <div key={i}>{content}</div>;
           })}
         </div>
       </div>

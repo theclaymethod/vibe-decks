@@ -3,6 +3,7 @@ import {
   Eyebrow,
   SectionHeader,
   MonoText,
+  type SlideMode,
 } from "@/design-system";
 import type { ReactNode } from "react";
 
@@ -26,7 +27,7 @@ interface DiagramTemplateProps {
   boxes: DiagramBox[];
   connections?: DiagramConnection[];
   layout?: "horizontal" | "vertical" | "grid";
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
   caption?: string;
 }
 
@@ -35,10 +36,10 @@ export function DiagramTemplate({
   title,
   boxes,
   layout = "horizontal",
-  variant = "light",
+  mode = "white",
   caption,
 }: DiagramTemplateProps) {
-  const isLight = variant === "light" || variant === "cream";
+  const isLight = mode === "white" || mode === "yellow";
 
   const getBoxStyle = (box: DiagramBox) => {
     const baseStyle = {
@@ -79,12 +80,12 @@ export function DiagramTemplate({
   }[layout];
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
         <div className="mb-8">
           {eyebrow && (
             <Eyebrow
-              className="text-[14px]"
+              className="text-[20px]"
               style={{ color: "var(--color-primary)" }}
             >
               {eyebrow}
@@ -92,7 +93,7 @@ export function DiagramTemplate({
           )}
           <SectionHeader
             className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
+            style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}
           >
             {title}
           </SectionHeader>
@@ -120,7 +121,7 @@ export function DiagramTemplate({
                     </div>
                   )}
                   <MonoText
-                    className="text-[14px] font-medium uppercase tracking-wider block"
+                    className="text-[20px] font-medium uppercase tracking-wider block"
                     style={{
                       color:
                         box.variant === "primary"
@@ -134,7 +135,7 @@ export function DiagramTemplate({
                   </MonoText>
                   {box.sublabel && (
                     <MonoText
-                      className="text-[11px] mt-1 block"
+                      className="text-[16px] mt-1 block"
                       style={{
                         color:
                           box.variant === "primary"
@@ -198,7 +199,7 @@ export function DiagramTemplate({
         {caption && (
           <div className="mt-8 text-center">
             <MonoText
-              className="text-[12px]"
+              className="text-[18px]"
               style={{
                 color: isLight
                   ? "var(--color-text-muted)"

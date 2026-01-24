@@ -4,6 +4,7 @@ import {
   Eyebrow,
   SectionHeader,
   ListItem,
+  type SlideMode,
 } from "@/design-system";
 
 interface TwoColumnTemplateProps {
@@ -12,7 +13,7 @@ interface TwoColumnTemplateProps {
   leftContent: React.ReactNode;
   rightContent: React.ReactNode;
   ratio?: "1:1" | "2:1" | "1:2" | "3:2" | "2:3";
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function TwoColumnTemplate({
@@ -21,24 +22,14 @@ export function TwoColumnTemplate({
   leftContent,
   rightContent,
   ratio = "1:1",
-  variant = "light",
+  mode = "white",
 }: TwoColumnTemplateProps) {
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
-        <div className="mb-8">
-          {eyebrow && (
-            <Eyebrow
-              className="text-[14px]"
-              style={{ color: "var(--color-primary)" }}
-            >
-              {eyebrow}
-            </Eyebrow>
-          )}
-          <SectionHeader
-            className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
-          >
+        <div className="mb-10">
+          {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+          <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
             {title}
           </SectionHeader>
         </div>
@@ -62,7 +53,7 @@ interface TwoColumnTextProps {
   leftItems: string[];
   rightTitle: string;
   rightItems: string[];
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function TwoColumnTextTemplate({
@@ -72,17 +63,20 @@ export function TwoColumnTextTemplate({
   leftItems,
   rightTitle,
   rightItems,
-  variant = "light",
+  mode = "white",
 }: TwoColumnTextProps) {
   const leftContent = (
     <div>
       <h3
-        className="text-xl mb-4"
-        style={{ fontFamily: "var(--font-heading)" }}
+        className="text-[32px] uppercase mb-6"
+        style={{
+          fontFamily: "var(--font-heading)",
+          color: "var(--color-text-primary)",
+        }}
       >
         {leftTitle}
       </h3>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {leftItems.map((item, idx) => (
           <ListItem key={idx} number={idx + 1}>
             {item}
@@ -95,12 +89,15 @@ export function TwoColumnTextTemplate({
   const rightContent = (
     <div>
       <h3
-        className="text-xl mb-4"
-        style={{ fontFamily: "var(--font-heading)" }}
+        className="text-[32px] uppercase mb-6"
+        style={{
+          fontFamily: "var(--font-heading)",
+          color: "var(--color-text-primary)",
+        }}
       >
         {rightTitle}
       </h3>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {rightItems.map((item, idx) => (
           <ListItem key={idx} number={idx + 1}>
             {item}
@@ -116,7 +113,7 @@ export function TwoColumnTextTemplate({
       title={title}
       leftContent={leftContent}
       rightContent={rightContent}
-      variant={variant}
+      mode={mode}
     />
   );
 }

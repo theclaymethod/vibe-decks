@@ -1,9 +1,9 @@
 import {
   SlideContainer,
-  CornerBrackets,
   Eyebrow,
   SectionHeader,
   MonoText,
+  type SlideMode,
 } from "@/design-system";
 
 interface PhotoGridItem {
@@ -17,8 +17,7 @@ interface PhotoGridTemplateProps {
   title: string;
   items: PhotoGridItem[];
   columns?: 2 | 3 | 4;
-  variant?: "light" | "dark" | "cream";
-  showBrackets?: boolean;
+  mode?: SlideMode;
 }
 
 export function PhotoGridTemplate({
@@ -26,8 +25,7 @@ export function PhotoGridTemplate({
   title,
   items,
   columns = 3,
-  variant = "light",
-  showBrackets = true,
+  mode = "white",
 }: PhotoGridTemplateProps) {
   const colClass = {
     2: "grid-cols-2",
@@ -39,12 +37,12 @@ export function PhotoGridTemplate({
   const rowClass = rows === 1 ? "grid-rows-1" : "grid-rows-2";
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
         <div className="mb-6">
           {eyebrow && (
             <Eyebrow
-              className="text-[14px]"
+              className="text-[20px]"
               style={{ color: "var(--color-primary)" }}
             >
               {eyebrow}
@@ -52,7 +50,7 @@ export function PhotoGridTemplate({
           )}
           <SectionHeader
             className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
+            style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}
           >
             {title}
           </SectionHeader>
@@ -61,16 +59,17 @@ export function PhotoGridTemplate({
         <div className={`flex-1 grid ${colClass} ${rowClass} gap-4`}>
           {items.map((item, idx) => {
             const content = (
-              <div
-                className="relative h-full bg-cover bg-center rounded overflow-hidden"
-                style={{ backgroundImage: `url('${item.imageUrl}')` }}
-              >
-                <div className="absolute inset-0 bg-black/40" />
+              <div className="relative h-full rounded overflow-hidden group cursor-pointer">
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                  style={{ backgroundImage: `url('${item.imageUrl}')` }}
+                />
+                <div className="absolute inset-0 bg-black/40 transition-colors duration-300 group-hover:bg-black/30" />
                 <div className="absolute bottom-4 left-4 text-white">
                   <div
                     style={{
                       fontFamily: "var(--font-heading)",
-                      fontSize: "18px",
+                      fontSize: "26px",
                     }}
                   >
                     {item.title}
@@ -78,7 +77,7 @@ export function PhotoGridTemplate({
                   {item.subtitle && (
                     <MonoText
                       className="opacity-80"
-                      style={{ fontSize: "14px" }}
+                      style={{ fontSize: "20px" }}
                     >
                       {item.subtitle}
                     </MonoText>
@@ -87,15 +86,7 @@ export function PhotoGridTemplate({
               </div>
             );
 
-            return showBrackets ? (
-              <CornerBrackets
-                key={idx}
-                size="sm"
-                color="rgba(255,255,255,0.3)"
-              >
-                {content}
-              </CornerBrackets>
-            ) : (
+            return (
               <div key={idx} className="h-full">
                 {content}
               </div>

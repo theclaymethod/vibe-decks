@@ -1,5 +1,10 @@
 import { cn } from "@/lib/utils";
-import { SlideContainer, Eyebrow, SectionHeader, MonoText } from "@/design-system";
+import {
+  SlideContainer,
+  Eyebrow,
+  SectionHeader,
+  type SlideMode,
+} from "@/design-system";
 
 type MilestoneStatus = "complete" | "current" | "future";
 
@@ -15,94 +20,76 @@ interface TimelineTemplateProps {
   eyebrow?: string;
   title: string;
   milestones: Milestone[];
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function TimelineTemplate({
   eyebrow,
   title,
   milestones,
-  variant = "light",
+  mode = "white",
 }: TimelineTemplateProps) {
-  const isLight = variant === "light" || variant === "cream";
-
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
-        <div className="mb-8">
-          {eyebrow && (
-            <Eyebrow
-              className="text-[14px]"
-              style={{ color: "var(--color-primary)" }}
-            >
-              {eyebrow}
-            </Eyebrow>
-          )}
-          <SectionHeader
-            className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
-          >
+        <div className="mb-10">
+          {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+          <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
             {title}
           </SectionHeader>
         </div>
 
         <div className="flex-1 flex items-center">
-          <div className="relative pl-8">
+          <div className="relative pl-10">
             <div
-              className="absolute left-[11px] top-0 bottom-0 w-0.5"
-              style={{
-                backgroundColor: isLight
-                  ? "rgba(0,0,0,0.1)"
-                  : "rgba(255,255,255,0.2)",
-              }}
+              className="absolute left-[14px] top-0 bottom-0 w-[3px]"
+              style={{ backgroundColor: "var(--color-border)" }}
             />
 
             {milestones.map((m, i) => (
-              <div key={i} className="relative flex items-start mb-10 last:mb-0">
+              <div key={i} className="relative flex items-start mb-12 last:mb-0 cursor-pointer rounded-lg -ml-4 pl-4 pr-4 py-3 transition-all duration-300 hover:bg-[var(--color-border)]/10">
                 <div
                   className={cn(
-                    "absolute left-0 w-6 h-6 rounded-full border-2",
-                    m.status === "complete" &&
-                      "border-[var(--color-primary)]",
-                    m.status === "current" &&
-                      "border-[var(--color-primary)] animate-pulse",
-                    m.status === "future" &&
-                      (isLight ? "bg-white border-gray-300" : "bg-transparent border-gray-500")
+                    "absolute left-0 w-8 h-8 border-2",
+                    m.status === "current" && "animate-pulse"
                   )}
                   style={{
+                    borderColor: "var(--color-border)",
                     backgroundColor:
-                      m.status !== "future" ? "var(--color-primary)" : undefined,
+                      m.status !== "future"
+                        ? "var(--color-yellow)"
+                        : "var(--color-bg-primary)",
                   }}
                 />
 
-                <div className="ml-12">
-                  <MonoText
-                    className="text-[12px] uppercase tracking-widest block"
-                    style={{ color: "var(--color-primary)" }}
+                <div className="ml-16">
+                  <span
+                    className="text-[16px] uppercase tracking-[0.1em] block"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      color: "var(--color-text-muted)",
+                    }}
                   >
                     {m.phase} — {m.date}
-                  </MonoText>
+                  </span>
                   <h3
-                    className="text-[24px] mt-2"
+                    className="text-[36px] uppercase mt-2"
                     style={{
                       fontFamily: "var(--font-heading)",
-                      color: isLight
-                        ? "var(--color-text-primary)"
-                        : "var(--color-text-inverse)",
+                      color: "var(--color-text-primary)",
                     }}
                   >
                     {m.title}
                   </h3>
-                  <MonoText
-                    className="text-[14px] mt-2 block max-w-md"
+                  <span
+                    className="text-[20px] mt-3 block max-w-lg leading-relaxed"
                     style={{
-                      color: isLight
-                        ? "var(--color-text-muted)"
-                        : "rgba(255,255,255,0.7)",
+                      fontFamily: "var(--font-body)",
+                      color: "var(--color-text-secondary)",
                     }}
                   >
                     {m.description}
-                  </MonoText>
+                  </span>
                 </div>
               </div>
             ))}

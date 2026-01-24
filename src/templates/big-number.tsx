@@ -1,12 +1,11 @@
-import { SlideContainer, CenterContent, CornerBrackets, Eyebrow, MonoText } from "@/design-system";
+import { SlideContainer, CenterContent, Eyebrow, type SlideMode } from "@/design-system";
 
 interface BigNumberTemplateProps {
   eyebrow?: string;
   number: string;
   label: string;
   description?: string;
-  variant?: "light" | "dark" | "primary";
-  showBrackets?: boolean;
+  mode?: SlideMode;
 }
 
 export function BigNumberTemplate({
@@ -14,73 +13,46 @@ export function BigNumberTemplate({
   number,
   label,
   description,
-  variant = "light",
-  showBrackets = false,
+  mode = "yellow",
 }: BigNumberTemplateProps) {
-  const textColor =
-    variant === "light"
-      ? "var(--color-text-primary)"
-      : "var(--color-text-inverse)";
-
-  const mutedColor =
-    variant === "light"
-      ? "var(--color-text-muted)"
-      : "rgba(255,255,255,0.7)";
-
-  const accentColor =
-    variant === "light" ? "var(--color-primary)" : "rgba(255,255,255,0.3)";
-
-  const numberContent = (
-    <div className="px-12 py-8">
-      <div
-        className="font-light leading-none"
-        style={{
-          fontFamily: "var(--font-heading)",
-          fontSize: "clamp(8rem, 20vw, 14rem)",
-          color: variant === "light" ? "var(--color-primary)" : textColor,
-        }}
-      >
-        {number}
-      </div>
-    </div>
-  );
-
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <CenterContent>
         {eyebrow && (
-          <Eyebrow
-            className="mb-6"
-            style={{
-              color: variant === "primary" ? "rgba(255,255,255,0.8)" : "var(--color-text-muted)",
-            }}
-          >
-            {eyebrow}
-          </Eyebrow>
+          <Eyebrow className="mb-8">{eyebrow}</Eyebrow>
         )}
 
-        {showBrackets ? (
-          <CornerBrackets size="lg" color={accentColor}>
-            {numberContent}
-          </CornerBrackets>
-        ) : (
-          numberContent
-        )}
+        <div
+          className="leading-none"
+          style={{
+            fontFamily: "var(--font-heading)",
+            fontSize: "clamp(12rem, 30vw, 20rem)",
+            color: "var(--color-text-primary)",
+          }}
+        >
+          {number}
+        </div>
 
-        <MonoText
-          className="text-xl uppercase tracking-[0.2em] mt-6 block"
-          style={{ color: textColor }}
+        <span
+          className="text-[24px] uppercase tracking-[0.2em] mt-8 block"
+          style={{
+            fontFamily: "var(--font-body)",
+            color: "var(--color-text-primary)",
+          }}
         >
           {label}
-        </MonoText>
+        </span>
 
         {description && (
-          <MonoText
-            className="text-base mt-4 max-w-md block text-center"
-            style={{ color: mutedColor }}
+          <span
+            className="text-[20px] mt-6 max-w-lg block text-center"
+            style={{
+              fontFamily: "var(--font-body)",
+              color: "var(--color-text-secondary)",
+            }}
           >
             {description}
-          </MonoText>
+          </span>
         )}
       </CenterContent>
     </SlideContainer>

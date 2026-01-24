@@ -1,20 +1,24 @@
-import { SlideContainer, CornerBrackets, MonoText } from "@/design-system";
+import { SlideContainer, TechCode, type SlideMode } from "@/design-system";
 
 interface HeroTemplateProps {
   eyebrow?: string;
   title: string;
   subtitle?: string;
+  code?: string;
   imageUrl?: string;
+  mode?: SlideMode;
 }
 
 export function HeroTemplate({
   eyebrow,
   title,
   subtitle,
+  code,
   imageUrl,
+  mode = "dark",
 }: HeroTemplateProps) {
   return (
-    <SlideContainer variant="dark" className="relative !p-0 overflow-hidden">
+    <SlideContainer mode={mode} className="relative !p-0 overflow-hidden">
       {imageUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -22,24 +26,30 @@ export function HeroTemplate({
         />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      {imageUrl && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      )}
 
-      <div className="relative h-full flex flex-col justify-end p-8 md:p-12 lg:p-16">
-        <div className="max-w-2xl">
+      <div className="relative h-full flex flex-col justify-end p-16">
+        <div className="max-w-4xl">
           {eyebrow && (
-            <MonoText
-              className="block text-[14px] tracking-[0.2em] uppercase mb-4"
-              style={{ color: "rgba(255,255,255,0.7)" }}
+            <span
+              className="block text-[18px] tracking-[0.2em] uppercase mb-4 font-medium"
+              style={{
+                fontFamily: "var(--font-body)",
+                color: "var(--color-text-muted)",
+              }}
             >
               {eyebrow}
-            </MonoText>
+            </span>
           )}
 
           <h1
-            className="text-white leading-[1.05] tracking-[-0.02em] mb-4"
+            className="leading-[0.9] tracking-[-0.02em] uppercase mb-6"
             style={{
               fontFamily: "var(--font-heading)",
-              fontSize: "clamp(2.4rem, 5vw, 4rem)",
+              fontSize: "clamp(4rem, 10vw, 7rem)",
+              color: "var(--color-text-primary)",
             }}
           >
             {title}
@@ -47,22 +57,22 @@ export function HeroTemplate({
 
           {subtitle && (
             <p
-              className="text-[18px] leading-[1.5]"
+              className="text-[26px] leading-[1.5] max-w-2xl"
               style={{
                 fontFamily: "var(--font-body)",
-                color: "rgba(255,255,255,0.7)",
+                color: "var(--color-text-secondary)",
               }}
             >
               {subtitle}
             </p>
           )}
         </div>
-      </div>
 
-      <div className="absolute bottom-8 right-8 md:bottom-12 md:right-12 lg:bottom-16 lg:right-16">
-        <CornerBrackets size="lg" color="rgba(255,255,255,0.3)">
-          <div className="w-16 h-16" />
-        </CornerBrackets>
+        {code && (
+          <div className="absolute bottom-8 right-16">
+            <TechCode size="sm">{code}</TechCode>
+          </div>
+        )}
       </div>
     </SlideContainer>
   );

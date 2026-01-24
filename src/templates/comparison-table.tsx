@@ -1,8 +1,8 @@
 import {
   SlideContainer,
-  CornerBrackets,
   Eyebrow,
   SectionHeader,
+  type SlideMode,
 } from "@/design-system";
 
 interface ComparisonRow {
@@ -17,7 +17,7 @@ interface ComparisonTableTemplateProps {
   rows: ComparisonRow[];
   beforeLabel?: string;
   afterLabel?: string;
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function ComparisonTableTemplate({
@@ -26,128 +26,96 @@ export function ComparisonTableTemplate({
   rows,
   beforeLabel = "Before",
   afterLabel = "After",
-  variant = "light",
+  mode = "white",
 }: ComparisonTableTemplateProps) {
-  const isLight = variant === "light" || variant === "cream";
-
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
-        <div className="mb-8">
-          {eyebrow && (
-            <Eyebrow
-              className="text-[14px]"
-              style={{ color: "var(--color-primary)" }}
-            >
-              {eyebrow}
-            </Eyebrow>
-          )}
-          <SectionHeader
-            className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
-          >
+        <div className="mb-10">
+          {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+          <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
             {title}
           </SectionHeader>
         </div>
 
         <div className="flex-1 flex items-center">
-          <CornerBrackets
-            size="lg"
-            color={isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.2)"}
+          <div
+            className="w-full border-2"
+            style={{ borderColor: "var(--color-border)" }}
           >
             <div
-              className="border"
-              style={{
-                borderColor: isLight
-                  ? "rgba(0,0,0,0.1)"
-                  : "rgba(255,255,255,0.1)",
-                backgroundColor: isLight ? "#fff" : "rgba(255,255,255,0.05)",
-              }}
+              className="grid grid-cols-3 border-b-2"
+              style={{ borderColor: "var(--color-border)" }}
             >
               <div
-                className="grid grid-cols-3 border-b"
+                className="p-6 text-[18px] font-semibold uppercase tracking-[0.05em]"
                 style={{
-                  borderColor: isLight
-                    ? "rgba(0,0,0,0.1)"
-                    : "rgba(255,255,255,0.1)",
+                  fontFamily: "var(--font-body)",
+                  color: "var(--color-text-primary)",
                 }}
               >
+                Feature
+              </div>
+              <div
+                className="p-6 text-center text-[18px] font-semibold uppercase tracking-[0.05em]"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  color: "var(--color-text-muted)",
+                }}
+              >
+                {beforeLabel}
+              </div>
+              <div
+                className="p-6 text-center text-[18px] font-semibold uppercase tracking-[0.05em]"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  color: "var(--color-text-primary)",
+                  backgroundColor: "var(--color-yellow)",
+                }}
+              >
+                {afterLabel}
+              </div>
+            </div>
+
+            {rows.map((row, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-3 border-b last:border-0 transition-colors duration-200 hover:bg-[var(--color-border)]/15"
+                style={{ borderColor: "var(--color-border)" }}
+              >
                 <div
-                  className="p-5 text-[14px] font-medium"
+                  className="p-6 text-[20px]"
                   style={{
                     fontFamily: "var(--font-body)",
-                    color: isLight
+                    color: "var(--color-text-primary)",
+                  }}
+                >
+                  {row.feature}
+                </div>
+                <div
+                  className="p-6 text-center text-[28px] font-bold"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    color: row.before
                       ? "var(--color-text-primary)"
-                      : "var(--color-text-inverse)",
+                      : "var(--color-text-muted)",
                   }}
                 >
-                  Feature
+                  {row.before ? "+" : "—"}
                 </div>
                 <div
-                  className="p-5 text-center text-[14px] font-medium"
+                  className="p-6 text-center text-[28px] font-bold"
                   style={{
                     fontFamily: "var(--font-body)",
-                    color: isLight
-                      ? "var(--color-text-muted)"
-                      : "rgba(255,255,255,0.6)",
+                    backgroundColor: "var(--color-yellow)",
+                    color: "var(--color-black)",
                   }}
                 >
-                  {beforeLabel}
-                </div>
-                <div
-                  className="p-5 text-center text-[14px] font-medium"
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    color: "var(--color-primary)",
-                  }}
-                >
-                  {afterLabel}
+                  {row.after ? "+" : "—"}
                 </div>
               </div>
-
-              {rows.map((row, i) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-3 border-b last:border-0"
-                  style={{
-                    borderColor: isLight
-                      ? "rgba(0,0,0,0.05)"
-                      : "rgba(255,255,255,0.05)",
-                    backgroundColor:
-                      i % 2 === 0
-                        ? "transparent"
-                        : isLight
-                          ? "rgba(0,0,0,0.02)"
-                          : "rgba(255,255,255,0.02)",
-                  }}
-                >
-                  <div
-                    className="p-5 text-[14px]"
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      color: isLight
-                        ? "var(--color-text-primary)"
-                        : "var(--color-text-inverse)",
-                    }}
-                  >
-                    {row.feature}
-                  </div>
-                  <div
-                    className="p-5 text-center text-2xl"
-                    style={{ color: row.before ? "#10b981" : "#ef4444" }}
-                  >
-                    {row.before ? "✓" : "✗"}
-                  </div>
-                  <div
-                    className="p-5 text-center text-2xl"
-                    style={{ color: row.after ? "#10b981" : "#ef4444" }}
-                  >
-                    {row.after ? "✓" : "✗"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CornerBrackets>
+            ))}
+          </div>
         </div>
       </div>
     </SlideContainer>

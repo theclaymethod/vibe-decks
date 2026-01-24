@@ -1,4 +1,4 @@
-import { SlideContainer, CornerBrackets, MonoText } from "@/design-system";
+import { SlideContainer, MonoText } from "@/design-system";
 
 interface FullscreenImageTemplateProps {
   imageUrl: string;
@@ -7,7 +7,6 @@ interface FullscreenImageTemplateProps {
   subtitle?: string;
   position?: "bottom-left" | "bottom-right" | "center" | "top-left";
   overlay?: "gradient" | "dark" | "light" | "none";
-  showBrackets?: boolean;
 }
 
 export function FullscreenImageTemplate({
@@ -17,7 +16,6 @@ export function FullscreenImageTemplate({
   subtitle,
   position = "bottom-left",
   overlay = "gradient",
-  showBrackets = true,
 }: FullscreenImageTemplateProps) {
   const overlayClass = {
     gradient: "bg-gradient-to-t from-black/80 via-black/40 to-transparent",
@@ -34,7 +32,7 @@ export function FullscreenImageTemplate({
   }[position];
 
   return (
-    <SlideContainer variant="dark" className="relative !p-0 overflow-hidden">
+    <SlideContainer mode="dark" className="relative !p-0 overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${imageUrl}')` }}
@@ -43,10 +41,10 @@ export function FullscreenImageTemplate({
       {overlay !== "none" && <div className={`absolute inset-0 ${overlayClass}`} />}
 
       <div className={`relative h-full flex flex-col p-16 ${positionClass}`}>
-        <div className={position === "center" ? "max-w-3xl" : "max-w-2xl"}>
+        <div className={position === "center" ? "max-w-4xl" : "max-w-3xl"}>
           {eyebrow && (
             <MonoText
-              className="block text-[14px] tracking-[0.2em] uppercase mb-4"
+              className="block text-[20px] tracking-[0.2em] uppercase mb-5"
               style={{ color: "rgba(255,255,255,0.7)" }}
             >
               {eyebrow}
@@ -54,10 +52,10 @@ export function FullscreenImageTemplate({
           )}
 
           <h1
-            className="text-white leading-[1.05] tracking-[-0.02em] mb-4"
+            className="text-white leading-[1.05] tracking-[-0.02em] mb-6"
             style={{
               fontFamily: "var(--font-heading)",
-              fontSize: "clamp(2.4rem, 5vw, 4rem)",
+              fontSize: "clamp(3.5rem, 7vw, 6rem)",
             }}
           >
             {title}
@@ -65,7 +63,7 @@ export function FullscreenImageTemplate({
 
           {subtitle && (
             <p
-              className="text-[18px] leading-[1.5]"
+              className="text-[26px] leading-[1.5]"
               style={{
                 fontFamily: "var(--font-body)",
                 color: "rgba(255,255,255,0.7)",
@@ -76,14 +74,6 @@ export function FullscreenImageTemplate({
           )}
         </div>
       </div>
-
-      {showBrackets && (
-        <div className="absolute bottom-12 right-12">
-          <CornerBrackets size="lg" color="rgba(255,255,255,0.3)">
-            <div className="w-16 h-16" />
-          </CornerBrackets>
-        </div>
-      )}
     </SlideContainer>
   );
 }

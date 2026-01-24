@@ -1,9 +1,9 @@
 import {
   SlideContainer,
-  CornerBrackets,
   Eyebrow,
   SectionHeader,
   MonoText,
+  type SlideMode,
 } from "@/design-system";
 
 interface PhoneMockupTemplateProps {
@@ -11,7 +11,7 @@ interface PhoneMockupTemplateProps {
   title?: string;
   imageUrl: string;
   caption?: string;
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
   phoneColor?: "black" | "white" | "silver";
 }
 
@@ -20,10 +20,10 @@ export function PhoneMockupTemplate({
   title,
   imageUrl,
   caption,
-  variant = "cream",
+  mode = "white",
   phoneColor = "black",
 }: PhoneMockupTemplateProps) {
-  const isLight = variant === "light" || variant === "cream";
+  const isLight = mode === "white" || mode === "yellow";
   const frameColor = {
     black: "#1a1a1a",
     white: "#f5f5f5",
@@ -31,7 +31,7 @@ export function PhoneMockupTemplate({
   }[phoneColor];
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <div className="h-full flex flex-col items-center justify-center">
         {eyebrow && (
           <Eyebrow className="mb-2" style={{ color: "var(--color-primary)" }}>
@@ -42,42 +42,37 @@ export function PhoneMockupTemplate({
         {title && (
           <SectionHeader
             className="mb-8 text-center"
-            style={{ fontSize: "clamp(1.8rem, 3vw, 2.2rem)" }}
+            style={{ fontSize: "clamp(2.5rem, 4vw, 3rem)" }}
           >
             {title}
           </SectionHeader>
         )}
 
-        <CornerBrackets
-          size="lg"
-          color={isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.2)"}
+        <div
+          className="relative rounded-[40px] overflow-hidden"
+          style={{
+            border: `12px solid ${frameColor}`,
+            maxHeight: "65vh",
+          }}
         >
           <div
-            className="relative rounded-[40px] overflow-hidden"
-            style={{
-              border: `12px solid ${frameColor}`,
-              maxHeight: "65vh",
-            }}
-          >
-            <div
-              className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-7 rounded-full z-10"
-              style={{ backgroundColor: frameColor }}
-            />
+            className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-7 rounded-full z-10"
+            style={{ backgroundColor: frameColor }}
+          />
 
-            <div
-              className="bg-cover bg-center bg-no-repeat"
-              style={{
-                width: "280px",
-                height: "600px",
-                backgroundImage: `url('${imageUrl}')`,
-              }}
-            />
-          </div>
-        </CornerBrackets>
+          <div
+            className="bg-cover bg-center bg-no-repeat"
+            style={{
+              width: "280px",
+              height: "600px",
+              backgroundImage: `url('${imageUrl}')`,
+            }}
+          />
+        </div>
 
         {caption && (
           <MonoText
-            className="mt-8 text-center max-w-md block text-[14px]"
+            className="mt-8 text-center max-w-md block text-[20px]"
             style={{
               color: isLight
                 ? "var(--color-text-muted)"

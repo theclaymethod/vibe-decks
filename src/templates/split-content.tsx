@@ -1,4 +1,10 @@
-import { SlideContainer, TwoColumnLayout, Eyebrow, SectionHeader, MonoText } from "@/design-system";
+import {
+  SlideContainer,
+  TwoColumnLayout,
+  Eyebrow,
+  SectionHeader,
+  type SlideMode,
+} from "@/design-system";
 
 interface SplitContentTemplateProps {
   eyebrow?: string;
@@ -7,7 +13,7 @@ interface SplitContentTemplateProps {
   bulletPoints?: string[];
   imageUrl: string;
   imageSide?: "left" | "right";
-  variant?: "light" | "dark" | "cream";
+  mode?: SlideMode;
 }
 
 export function SplitContentTemplate({
@@ -17,41 +23,40 @@ export function SplitContentTemplate({
   bulletPoints,
   imageUrl,
   imageSide = "right",
-  variant = "light",
+  mode = "white",
 }: SplitContentTemplateProps) {
   const textContent = (
     <div className="space-y-6">
-      {eyebrow && (
-        <Eyebrow
-          className="text-[14px]"
-          style={{ color: "var(--color-primary)" }}
-        >
-          {eyebrow}
-        </Eyebrow>
-      )}
-      <SectionHeader style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}>
+      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+      <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
         {title}
       </SectionHeader>
-      <MonoText
-        className="text-[16px] leading-[1.8] block"
-        style={{ color: "var(--color-text-secondary)" }}
+      <p
+        className="text-[22px] leading-[1.7]"
+        style={{
+          fontFamily: "var(--font-body)",
+          color: "var(--color-text-secondary)",
+        }}
       >
         {content}
-      </MonoText>
+      </p>
       {bulletPoints && bulletPoints.length > 0 && (
-        <ul className="mt-6 space-y-3">
+        <ul className="mt-6 space-y-4">
           {bulletPoints.map((point, idx) => (
-            <li key={idx} className="flex items-start gap-3">
+            <li key={idx} className="flex items-start gap-4">
               <span
-                className="mt-2 w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: "var(--color-primary)" }}
+                className="mt-2.5 w-3 h-3 shrink-0"
+                style={{ backgroundColor: "var(--color-yellow)" }}
               />
-              <MonoText
-                className="text-[14px] leading-relaxed"
-                style={{ color: "var(--color-text-secondary)" }}
+              <span
+                className="text-[20px] leading-relaxed"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  color: "var(--color-text-secondary)",
+                }}
               >
                 {point}
-              </MonoText>
+              </span>
             </li>
           ))}
         </ul>
@@ -61,7 +66,7 @@ export function SplitContentTemplate({
 
   const imageContent = (
     <div
-      className="w-full h-full bg-cover bg-center rounded-lg"
+      className="w-full h-full bg-cover bg-center"
       style={{
         backgroundImage: `url('${imageUrl}')`,
         minHeight: 400,
@@ -70,7 +75,7 @@ export function SplitContentTemplate({
   );
 
   return (
-    <SlideContainer variant={variant}>
+    <SlideContainer mode={mode}>
       <TwoColumnLayout
         left={imageSide === "left" ? imageContent : textContent}
         right={imageSide === "right" ? imageContent : textContent}
