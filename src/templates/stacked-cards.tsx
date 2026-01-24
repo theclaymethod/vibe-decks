@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -5,6 +6,23 @@ import {
   MonoText,
   type SlideMode,
 } from "@/design-system";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  },
+};
 
 interface StackedCard {
   label: string;
@@ -63,9 +81,14 @@ export function StackedCardsTemplate({
         </div>
 
         <div className="w-2/3 flex items-center justify-center">
-          <div className="relative w-80 h-64">
+          <motion.div
+            className="relative w-80 h-64"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {cards.map((card, i) => (
-              <div
+              <motion.div
                 key={i}
                 className="absolute p-6 shadow-lg cursor-pointer transition-all duration-300 hover:z-50 hover:-translate-y-2 hover:shadow-2xl"
                 style={{
@@ -77,6 +100,8 @@ export function StackedCardsTemplate({
                   width: "100%",
                   height: "100%",
                 }}
+                variants={itemVariants}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
               >
                 <div
                   className="text-[18px] uppercase tracking-[0.15em] mb-2"
@@ -110,9 +135,9 @@ export function StackedCardsTemplate({
                     {card.description}
                   </MonoText>
                 )}
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </SlideContainer>

@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -19,6 +20,23 @@ interface PhotoGridTemplateProps {
   columns?: 2 | 3 | 4;
   mode?: SlideMode;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.3, ease: "easeOut" as const },
+  },
+};
 
 export function PhotoGridTemplate({
   eyebrow,
@@ -56,12 +74,17 @@ export function PhotoGridTemplate({
           </SectionHeader>
         </div>
 
-        <div className={`flex-1 grid ${colClass} ${rowClass} gap-4`}>
-          {items.map((item, idx) => {
-            const content = (
+        <motion.div
+          className={`flex-1 grid ${colClass} ${rowClass} gap-4`}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {items.map((item, idx) => (
+            <motion.div key={idx} className="h-full" variants={itemVariants}>
               <div className="relative h-full rounded overflow-hidden group cursor-pointer">
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                   style={{ backgroundImage: `url('${item.imageUrl}')` }}
                 />
                 <div className="absolute inset-0 bg-black/40 transition-colors duration-300 group-hover:bg-black/30" />
@@ -84,15 +107,9 @@ export function PhotoGridTemplate({
                   )}
                 </div>
               </div>
-            );
-
-            return (
-              <div key={idx} className="h-full">
-                {content}
-              </div>
-            );
-          })}
-        </div>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </SlideContainer>
   );

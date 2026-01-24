@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { SlideContainer } from "@/design-system";
 
 interface BeforeAfterTemplateProps {
@@ -25,9 +26,12 @@ export function BeforeAfterTemplate({
           style={{ backgroundColor: "var(--color-black)" }}
         />
 
-        <div
+        <motion.div
           className="h-full p-16 flex flex-col justify-center"
           style={{ backgroundColor: "var(--color-black)" }}
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <span
             className="inline-block text-[18px] tracking-[0.2em] uppercase font-medium"
@@ -70,11 +74,14 @@ export function BeforeAfterTemplate({
               </li>
             ))}
           </ul>
-        </div>
+        </motion.div>
 
-        <div
+        <motion.div
           className="h-full p-16 flex flex-col justify-center"
           style={{ backgroundColor: "var(--color-yellow)" }}
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
         >
           <span
             className="inline-block text-[18px] tracking-[0.2em] uppercase font-medium"
@@ -117,7 +124,7 @@ export function BeforeAfterTemplate({
               </li>
             ))}
           </ul>
-        </div>
+        </motion.div>
       </div>
     </SlideContainer>
   );

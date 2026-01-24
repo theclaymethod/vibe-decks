@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -5,6 +6,23 @@ import {
   StatCard,
   type SlideMode,
 } from "@/design-system";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  },
+};
 
 interface Stat {
   value: string;
@@ -37,17 +55,28 @@ export function StatCardsTemplate({
           </SectionHeader>
         </div>
 
-        <div className="flex-1 flex items-center justify-around gap-8">
+        <motion.div
+          className="flex-1 flex items-center justify-around gap-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {stats.map((stat, i) => (
-            <StatCard
+            <motion.div
               key={i}
-              value={stat.value}
-              label={stat.label}
-              sublabel={stat.sublabel}
-              className="flex-1 cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
-            />
+              variants={itemVariants}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="flex-1"
+            >
+              <StatCard
+                value={stat.value}
+                label={stat.label}
+                sublabel={stat.sublabel}
+                className="cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </SlideContainer>
   );

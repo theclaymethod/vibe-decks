@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   TwoColumnLayout,
@@ -27,21 +28,43 @@ export function SplitContentTemplate({
 }: SplitContentTemplateProps) {
   const textContent = (
     <div className="space-y-6">
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
-        {title}
-      </SectionHeader>
-      <p
+      {eyebrow && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <Eyebrow>{eyebrow}</Eyebrow>
+        </motion.div>
+      )}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: eyebrow ? 0.15 : 0, ease: "easeOut" }}
+      >
+        <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
+          {title}
+        </SectionHeader>
+      </motion.div>
+      <motion.p
         className="text-[22px] leading-[1.7]"
         style={{
           fontFamily: "var(--font-body)",
           color: "var(--color-text-secondary)",
         }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: eyebrow ? 0.3 : 0.15, ease: "easeOut" }}
       >
         {content}
-      </p>
+      </motion.p>
       {bulletPoints && bulletPoints.length > 0 && (
-        <ul className="mt-6 space-y-4">
+        <motion.ul
+          className="mt-6 space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: eyebrow ? 0.45 : 0.3, ease: "easeOut" }}
+        >
           {bulletPoints.map((point, idx) => (
             <li key={idx} className="flex items-start gap-4">
               <span
@@ -59,7 +82,7 @@ export function SplitContentTemplate({
               </span>
             </li>
           ))}
-        </ul>
+        </motion.ul>
       )}
     </div>
   );

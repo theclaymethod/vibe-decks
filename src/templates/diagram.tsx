@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -99,7 +100,12 @@ export function DiagramTemplate({
           </SectionHeader>
         </div>
 
-        <div className="flex-1 flex items-center justify-center">
+        <motion.div
+          className="flex-1 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
           <div className={layoutClass}>
             {boxes.map((box, idx) => (
               <div key={box.id} className="flex items-center gap-4">
@@ -194,7 +200,7 @@ export function DiagramTemplate({
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {caption && (
           <div className="mt-8 text-center">

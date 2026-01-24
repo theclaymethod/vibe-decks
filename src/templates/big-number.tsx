@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { SlideContainer, CenterContent, Eyebrow, type SlideMode } from "@/design-system";
 
 interface BigNumberTemplateProps {
@@ -19,40 +20,55 @@ export function BigNumberTemplate({
     <SlideContainer mode={mode}>
       <CenterContent>
         {eyebrow && (
-          <Eyebrow className="mb-8">{eyebrow}</Eyebrow>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <Eyebrow className="mb-8">{eyebrow}</Eyebrow>
+          </motion.div>
         )}
 
-        <div
+        <motion.div
           className="leading-none"
           style={{
             fontFamily: "var(--font-heading)",
             fontSize: "clamp(12rem, 30vw, 20rem)",
             color: "var(--color-text-primary)",
           }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: eyebrow ? 0.15 : 0, ease: "easeOut" }}
         >
           {number}
-        </div>
+        </motion.div>
 
-        <span
+        <motion.span
           className="text-[24px] uppercase tracking-[0.2em] mt-8 block"
           style={{
             fontFamily: "var(--font-body)",
             color: "var(--color-text-primary)",
           }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: eyebrow ? 0.3 : 0.15, ease: "easeOut" }}
         >
           {label}
-        </span>
+        </motion.span>
 
         {description && (
-          <span
+          <motion.span
             className="text-[20px] mt-6 max-w-lg block text-center"
             style={{
               fontFamily: "var(--font-body)",
               color: "var(--color-text-secondary)",
             }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: eyebrow ? 0.45 : 0.3, ease: "easeOut" }}
           >
             {description}
-          </span>
+          </motion.span>
         )}
       </CenterContent>
     </SlideContainer>

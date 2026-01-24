@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { SlideContainer, MonoText } from "@/design-system";
 
 interface FullscreenImageTemplateProps {
@@ -33,9 +34,12 @@ export function FullscreenImageTemplate({
 
   return (
     <SlideContainer mode="dark" className="relative !p-0 overflow-hidden">
-      <div
+      <motion.div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${imageUrl}')` }}
+        initial={{ opacity: 0, scale: 1.05 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
       />
 
       {overlay !== "none" && <div className={`absolute inset-0 ${overlayClass}`} />}

@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import {
   SlideContainer,
@@ -40,14 +41,36 @@ export function TimelineTemplate({
         </div>
 
         <div className="flex-1 flex items-center">
-          <div className="relative pl-10">
+          <motion.div
+            className="relative pl-10"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+              },
+            }}
+          >
             <div
               className="absolute left-[14px] top-0 bottom-0 w-[3px]"
               style={{ backgroundColor: "var(--color-border)" }}
             />
 
             {milestones.map((m, i) => (
-              <div key={i} className="relative flex items-start mb-12 last:mb-0 cursor-pointer rounded-lg -ml-4 pl-4 pr-4 py-3 transition-all duration-300 hover:bg-[var(--color-border)]/10">
+              <motion.div
+                key={i}
+                className="relative flex items-start mb-12 last:mb-0 cursor-pointer rounded-lg -ml-4 pl-4 pr-4 py-3 transition-all duration-300 hover:bg-[var(--color-border)]/10"
+                variants={{
+                  hidden: { opacity: 0, x: -20 },
+                  visible: {
+                    opacity: 1,
+                    x: 0,
+                    transition: { duration: 0.4, ease: "easeOut" },
+                  },
+                }}
+              >
                 <div
                   className={cn(
                     "absolute left-0 w-8 h-8 border-2",
@@ -91,9 +114,9 @@ export function TimelineTemplate({
                     {m.description}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </SlideContainer>

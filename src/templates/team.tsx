@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -20,6 +21,23 @@ interface TeamTemplateProps {
   columns?: 3 | 4 | 5 | 6;
   mode?: SlideMode;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.3, ease: "easeOut" as const },
+  },
+};
 
 export function TeamTemplate({
   eyebrow,
@@ -57,14 +75,20 @@ export function TeamTemplate({
           </SectionHeader>
         </div>
 
-        <div className={`flex-1 grid ${colClass} gap-6 items-center`}>
+        <motion.div
+          className={`flex-1 grid ${colClass} gap-6 items-center`}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {members.map((person, i) => (
-            <div
+            <motion.div
               key={i}
               className="flex flex-col items-center text-center group cursor-pointer"
+              variants={itemVariants}
             >
               <div
-                className="w-24 h-24 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
+                className="w-24 h-24 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 overflow-hidden"
                 style={{
                   backgroundColor: person.imageUrl
                     ? "transparent"
@@ -114,9 +138,9 @@ export function TeamTemplate({
               >
                 {person.role}
               </MonoText>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </SlideContainer>
   );

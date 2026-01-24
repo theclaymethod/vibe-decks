@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { SlideContainer, TechCode, type SlideMode } from "@/design-system";
 
 interface TitleTemplateProps {
@@ -26,7 +27,12 @@ export function TitleTemplate({
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="text-center max-w-5xl">
           {eyebrow && (
-            <div className="mb-6">
+            <motion.div
+              className="mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
               <span
                 className="text-[18px] tracking-[0.2em] uppercase font-medium"
                 style={{
@@ -36,33 +42,44 @@ export function TitleTemplate({
               >
                 {eyebrow}
               </span>
-            </div>
+            </motion.div>
           )}
 
-          <h1
+          <motion.h1
             className="text-[clamp(6rem,14vw,10rem)] uppercase tracking-[-0.02em] leading-[0.85]"
             style={{
               fontFamily: "var(--font-heading)",
               color: "var(--color-text-primary)",
             }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: eyebrow ? 0.15 : 0, ease: "easeOut" }}
           >
             {title}
-          </h1>
+          </motion.h1>
 
           {subtitle && (
-            <p
+            <motion.p
               className="mx-auto mt-8 max-w-3xl text-[26px] leading-relaxed"
               style={{
                 fontFamily: "var(--font-body)",
                 color: "var(--color-text-secondary)",
               }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: eyebrow ? 0.3 : 0.15, ease: "easeOut" }}
             >
               {subtitle}
-            </p>
+            </motion.p>
           )}
 
           {tag && (
-            <div className="mt-10 flex items-center justify-center">
+            <motion.div
+              className="mt-10 flex items-center justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: eyebrow ? 0.45 : 0.3, ease: "easeOut" }}
+            >
               <div
                 className="px-6 py-3 text-[16px] tracking-[0.15em] uppercase font-medium border-2"
                 style={{
@@ -73,7 +90,7 @@ export function TitleTemplate({
               >
                 {tag}
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </div>

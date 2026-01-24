@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -22,6 +23,23 @@ interface LogoCloudTemplateProps {
   mode?: SlideMode;
   centered?: boolean;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.3, ease: "easeOut" as const },
+  },
+};
 
 export function LogoCloudTemplate({
   eyebrow,
@@ -63,11 +81,14 @@ export function LogoCloudTemplate({
           </SectionHeader>
         </div>
 
-        <div
+        <motion.div
           className={`flex-1 grid ${colClass} ${rowClass} gap-4 items-center justify-items-center`}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
         >
-          {logos.map((logo, i) => {
-            const content = (
+          {logos.map((logo, i) => (
+            <motion.div key={i} variants={itemVariants}>
               <div
                 className="w-40 h-24 flex flex-col items-center justify-center transition-all duration-300 grayscale hover:grayscale-0 hover:scale-105 hover:shadow-md hover:-translate-y-1 cursor-pointer"
                 style={{
@@ -114,11 +135,9 @@ export function LogoCloudTemplate({
                   </MonoText>
                 )}
               </div>
-            );
-
-            return <div key={i}>{content}</div>;
-          })}
-        </div>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </SlideContainer>
   );

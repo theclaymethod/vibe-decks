@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -5,6 +6,23 @@ import {
   MonoText,
   type SlideMode,
 } from "@/design-system";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  },
+};
 
 interface ThreeUpItem {
   imageUrl: string;
@@ -60,9 +78,18 @@ export function ThreeUpTemplate({
         )}
 
         <div className="flex-1 flex items-center justify-center">
-          <div className="grid grid-cols-3 gap-6 w-full max-w-5xl">
-            {items.map((item, idx) => {
-              const content = (
+          <motion.div
+            className="grid grid-cols-3 gap-6 w-full max-w-5xl"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {items.map((item, idx) => (
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              >
                 <div className="flex flex-col group cursor-pointer transition-transform duration-300 hover:-translate-y-1">
                   <div className={`${aspectClass} rounded-lg overflow-hidden`}>
                     <div
@@ -96,11 +123,9 @@ export function ThreeUpTemplate({
                     )}
                   </div>
                 </div>
-              );
-
-              return <div key={idx}>{content}</div>;
-            })}
-          </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </SlideContainer>

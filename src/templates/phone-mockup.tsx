@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -48,12 +49,16 @@ export function PhoneMockupTemplate({
           </SectionHeader>
         )}
 
-        <div
+        <motion.div
           className="relative rounded-[40px] overflow-hidden"
           style={{
             border: `12px solid ${frameColor}`,
             maxHeight: "65vh",
           }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
         >
           <div
             className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-7 rounded-full z-10"
@@ -68,7 +73,7 @@ export function PhoneMockupTemplate({
               backgroundImage: `url('${imageUrl}')`,
             }}
           />
-        </div>
+        </motion.div>
 
         {caption && (
           <MonoText

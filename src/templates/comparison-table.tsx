@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -39,13 +40,30 @@ export function ComparisonTableTemplate({
         </div>
 
         <div className="flex-1 flex items-center">
-          <div
+          <motion.div
             className="w-full border-2"
             style={{ borderColor: "var(--color-border)" }}
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.1, delayChildren: 0.15 },
+              },
+            }}
           >
-            <div
+            <motion.div
               className="grid grid-cols-3 border-b-2"
               style={{ borderColor: "var(--color-border)" }}
+              variants={{
+                hidden: { opacity: 0, y: -10 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { duration: 0.3, ease: "easeOut" },
+                },
+              }}
             >
               <div
                 className="p-6 text-[18px] font-semibold uppercase tracking-[0.05em]"
@@ -75,13 +93,21 @@ export function ComparisonTableTemplate({
               >
                 {afterLabel}
               </div>
-            </div>
+            </motion.div>
 
             {rows.map((row, i) => (
-              <div
+              <motion.div
                 key={i}
                 className="grid grid-cols-3 border-b last:border-0 transition-colors duration-200 hover:bg-[var(--color-border)]/15"
                 style={{ borderColor: "var(--color-border)" }}
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    transition: { duration: 0.3, ease: "easeOut" },
+                  },
+                }}
               >
                 <div
                   className="p-6 text-[20px]"
@@ -113,9 +139,9 @@ export function ComparisonTableTemplate({
                 >
                   {row.after ? "+" : "—"}
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </SlideContainer>

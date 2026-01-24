@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   TwoColumnLayout,
@@ -28,19 +29,38 @@ export function TwoColumnTemplate({
     <SlideContainer mode={mode}>
       <div className="h-full flex flex-col">
         <div className="mb-10">
-          {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
-          <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
-            {title}
-          </SectionHeader>
+          {eyebrow && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <Eyebrow className="mb-3">{eyebrow}</Eyebrow>
+            </motion.div>
+          )}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: eyebrow ? 0.15 : 0, ease: "easeOut" }}
+          >
+            <SectionHeader style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}>
+              {title}
+            </SectionHeader>
+          </motion.div>
         </div>
 
-        <div className="flex-1">
+        <motion.div
+          className="flex-1"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: eyebrow ? 0.3 : 0.15, ease: "easeOut" }}
+        >
           <TwoColumnLayout
             left={leftContent}
             right={rightContent}
             ratio={ratio}
           />
-        </div>
+        </motion.div>
       </div>
     </SlideContainer>
   );

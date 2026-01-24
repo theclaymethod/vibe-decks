@@ -1,4 +1,22 @@
+import { motion } from "motion/react";
 import { SlideContainer, Eyebrow, SectionHeader, MonoText, type SlideMode } from "@/design-system";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  },
+};
 
 interface IconItem {
   icon: React.ReactNode;
@@ -51,9 +69,19 @@ export function IconGridTemplate({
         </div>
 
         <div className="flex-1 flex items-center">
-          <div className={`grid ${colClass} gap-8 w-full`}>
+          <motion.div
+            className={`grid ${colClass} gap-8 w-full`}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {items.map((item, idx) => (
-              <div key={idx} className="text-center">
+              <motion.div
+                key={idx}
+                className="text-center"
+                variants={itemVariants}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              >
                 <div
                   className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center text-3xl cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-lg"
                   style={{
@@ -87,9 +115,9 @@ export function IconGridTemplate({
                     {item.description}
                   </MonoText>
                 )}
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </SlideContainer>

@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   GridSection,
@@ -6,6 +7,23 @@ import {
   SectionHeader,
   type SlideMode,
 } from "@/design-system";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  },
+};
 
 interface Feature {
   icon?: React.ReactNode;
@@ -40,15 +58,27 @@ export function FeatureGridTemplate({
 
         <div className="flex-1 flex items-center">
           <GridSection columns={columns} className="w-full">
-            {features.map((feature, idx) => (
-              <FeatureCard
-                key={idx}
-                icon={feature.icon}
-                title={feature.title}
-                description={feature.description}
-                className="cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              />
-            ))}
+            <motion.div
+              className="contents"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {features.map((feature, idx) => (
+                <motion.div
+                  key={idx}
+                  variants={itemVariants}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                >
+                  <FeatureCard
+                    icon={feature.icon}
+                    title={feature.title}
+                    description={feature.description}
+                    className="cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
           </GridSection>
         </div>
       </div>

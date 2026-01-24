@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { SlideContainer, type SlideMode } from "@/design-system";
 
 interface QuoteTemplateProps {
@@ -16,28 +17,39 @@ export function QuoteTemplate({
   return (
     <SlideContainer mode={mode}>
       <div className="h-full flex flex-col items-center justify-center text-center">
-        <div
+        <motion.div
           className="text-[120px] leading-none mb-2"
           style={{
             fontFamily: "var(--font-heading)",
             color: "var(--color-yellow)",
           }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
           "
-        </div>
+        </motion.div>
 
-        <p
+        <motion.p
           className="max-w-5xl leading-[1.1] uppercase"
           style={{
             fontFamily: "var(--font-heading)",
             fontSize: "clamp(3rem, 6vw, 5rem)",
             color: "var(--color-text-primary)",
           }}
+          initial={{ opacity: 0, y: 30, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
         >
           {quote}
-        </p>
+        </motion.p>
 
-        <div className="mt-12 flex items-center gap-5">
+        <motion.div
+          className="mt-12 flex items-center gap-5"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+        >
           <div
             className="w-14 h-14 flex items-center justify-center"
             style={{ backgroundColor: "var(--color-yellow)" }}
@@ -77,7 +89,7 @@ export function QuoteTemplate({
               </span>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </SlideContainer>
   );

@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Eyebrow,
@@ -43,11 +44,15 @@ export function BrowserMockupTemplate({
           </SectionHeader>
         )}
 
-        <div
+        <motion.div
           className="w-full max-w-4xl shadow-2xl rounded-lg overflow-hidden"
           style={{
             border: `1px solid ${isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"}`,
           }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
         >
           <div
             className="h-10 flex items-center px-4 gap-2"
@@ -78,7 +83,7 @@ export function BrowserMockupTemplate({
             className="aspect-video bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: `url('${imageUrl}')` }}
           />
-        </div>
+        </motion.div>
 
         {caption && (
           <MonoText
