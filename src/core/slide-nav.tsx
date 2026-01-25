@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { deckConfig } from "../../deck.config";
+import { preloadSlide } from "@/deck/config";
 
 export interface SlideNavItem {
   number: number;
@@ -158,6 +159,7 @@ export function SlideNav({ slides, currentSlide, onNavigate }: SlideNavProps) {
                   <button
                     key={slide.number}
                     onClick={() => onNavigate(slide.number)}
+                    onMouseEnter={() => preloadSlide(slide.number)}
                     className={cn(
                       "w-full flex items-center gap-3 px-4 py-2.5 transition-all relative text-left",
                       isActive ? "bg-white/10" : "hover:bg-white/5"
