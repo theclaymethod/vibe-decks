@@ -27,7 +27,7 @@ Ask the user for:
 | **Layout** | `SlideContainer`, `TwoColumnLayout`, `GridSection`, `CenterContent`, `Container`, `HeaderBar`, `Divider` |
 | **Typography** | `HeroTitle`, `SectionHeader`, `Eyebrow`, `BodyText`, `MonoText`, `TechCode`, `SectionMarker`, `Quote`, `ListItem`, `PipeList`, `Label`, `CategoryLabel`, `SlideNumber` |
 | **Cards** | `FeatureCard`, `StatCard`, `QuoteCard`, `InfoCard`, `ProcessCard` |
-| **Decorative** | `IndustrialIcon`, `IconRow`, `LogoMark`, `CategoryGrid`, `FeatureBlock`, `WireframeBox`, `IsometricGrid` |
+| **Decorative** | `IndustrialIcon`, `IconRow`, `LogoMark`, `CategoryGrid`, `FeatureBlock`, `CrosshairMark`, `RuleGrid` |
 | **Types** | `SlideMode` ("dark" \| "yellow" \| "white"), `IconSymbol` |
 
 **CSS variables** (via `style={{}}`, NOT Tailwind color classes):

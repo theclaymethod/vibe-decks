@@ -46,6 +46,8 @@ const slideLoaders: Record<string, () => Promise<{ default: ComponentType }>> = 
     import("./slides/16-process").then((m) => ({ default: m.Slide16Process })),
   "17-showcase": () =>
     import("./slides/17-showcase").then((m) => ({ default: m.Slide17Showcase })),
+  "18-text-4": () =>
+    import("./slides/18-text-4").then((m) => ({ default: m.Slide18Text4 })),
 };
 
 // Cache for loaded components (bypasses lazy entirely once loaded)
@@ -115,6 +117,7 @@ const SLIDE_CONFIG_INTERNAL: SlideConfig[] = [
   { id: "partners", fileKey: "15-partners", title: "Tech Stack", shortTitle: "Stack" },
   { id: "process", fileKey: "16-process", title: "Process Cards", shortTitle: "Process" },
   { id: "showcase", fileKey: "17-showcase", title: "Three-Up Showcase", shortTitle: "Showcase" },
+  { id: "text-4", fileKey: "18-text-4", title: "Text 4", shortTitle: "Text 4" },
 ];
 
 export const SLIDE_CONFIG: SlideConfig[] = SLIDE_CONFIG_INTERNAL;

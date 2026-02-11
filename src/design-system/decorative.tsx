@@ -145,7 +145,7 @@ export function CategoryGrid({
       {items.map((item, i) => (
         <div
           key={i}
-          className="py-4 border-l first:border-l-0"
+          className="py-4 pl-4 border-l first:border-l-0 first:pl-0"
           style={{ borderColor: "var(--color-border)" }}
         >
           <div
@@ -234,68 +234,106 @@ export function FeatureBlock({
   );
 }
 
-export function WireframeBox({
+export function CrosshairMark({
   className,
   size = "md",
 }: {
   className?: string;
   size?: "sm" | "md" | "lg";
 }) {
-  const sizeClasses = {
-    sm: "w-24 h-24",
-    md: "w-40 h-40",
-    lg: "w-64 h-64",
-  };
+  const dims = { sm: 96, md: 160, lg: 256 };
+  const px = dims[size];
+  const tick = Math.round(px * 0.06);
+  const ringSize = Math.round(px * 0.35);
 
   return (
-    <svg
-      className={cn(sizeClasses[size], className)}
-      viewBox="0 0 100 100"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-      style={{ color: "var(--color-border)" }}
+    <div
+      className={cn("relative", className)}
+      style={{ width: px, height: px }}
     >
-      <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" />
-      <path d="M50 10 L50 50" />
-      <path d="M90 30 L50 50" />
-      <path d="M10 30 L50 50" />
-      <path d="M50 50 L50 90" />
-      <path d="M50 50 L90 70" opacity="0.3" />
-      <path d="M50 50 L10 70" opacity="0.3" />
-      <rect x="20" y="40" width="20" height="20" />
-      <rect x="60" y="40" width="20" height="20" />
-      <path d="M30 60 L30 80 L70 80 L70 60" strokeDasharray="2 2" />
-    </svg>
+      {/* Vertical hair */}
+      <div
+        className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2"
+        style={{ width: 1, backgroundColor: "var(--color-border)", opacity: 0.25 }}
+      />
+      {/* Horizontal hair */}
+      <div
+        className="absolute top-1/2 left-0 right-0 -translate-y-1/2"
+        style={{ height: 1, backgroundColor: "var(--color-border)", opacity: 0.25 }}
+      />
+      {/* Center ring */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          width: ringSize,
+          height: ringSize,
+          border: "1px solid var(--color-border)",
+          opacity: 0.5,
+        }}
+      />
+      {/* Center dot */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{ width: 4, height: 4, backgroundColor: "var(--color-border)" }}
+      />
+      {/* Corner ticks — top-left */}
+      <div className="absolute top-0 left-0" style={{ width: tick, height: 1, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
+      <div className="absolute top-0 left-0" style={{ width: 1, height: tick, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
+      {/* Corner ticks — top-right */}
+      <div className="absolute top-0 right-0" style={{ width: tick, height: 1, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
+      <div className="absolute top-0 right-0" style={{ width: 1, height: tick, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
+      {/* Corner ticks — bottom-left */}
+      <div className="absolute bottom-0 left-0" style={{ width: tick, height: 1, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
+      <div className="absolute bottom-0 left-0" style={{ width: 1, height: tick, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
+      {/* Corner ticks — bottom-right */}
+      <div className="absolute bottom-0 right-0" style={{ width: tick, height: 1, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
+      <div className="absolute bottom-0 right-0" style={{ width: 1, height: tick, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
+    </div>
   );
 }
 
-export function IsometricGrid({
+export function RuleGrid({
   className,
+  divisions = 8,
+  majorEvery = 4,
 }: {
   className?: string;
+  divisions?: number;
+  majorEvery?: number;
 }) {
+  const lines = Array.from({ length: divisions - 1 }, (_, i) => i + 1);
+
   return (
-    <svg
-      className={cn("w-full h-full", className)}
-      viewBox="0 0 200 200"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="0.5"
-      style={{ color: "var(--color-border)" }}
+    <div
+      className={cn("w-full h-full relative", className)}
+      style={{ border: "1px solid var(--color-border)", opacity: 0.8 }}
     >
-      <defs>
-        <pattern id="iso-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M0 10 L10 0 M10 20 L20 10" />
-          <path d="M0 10 L10 20 M10 0 L20 10" />
-        </pattern>
-      </defs>
-      <rect width="200" height="200" fill="url(#iso-grid)" />
-      <rect x="60" y="80" width="40" height="40" strokeWidth="2" />
-      <path d="M60 80 L80 60 L120 60 L100 80" strokeWidth="2" />
-      <path d="M100 80 L120 60 L120 100 L100 120" strokeWidth="2" />
-      <rect x="80" y="100" width="40" height="40" strokeWidth="1.5" opacity="0.6" />
-      <path d="M80 100 L100 80 L140 80 L120 100" strokeWidth="1.5" opacity="0.6" />
-    </svg>
+      {lines.map((i) => {
+        const pct = (i / divisions) * 100;
+        const isMajor = i % majorEvery === 0;
+        return (
+          <div key={`v-${i}`}>
+            <div
+              className="absolute top-0 bottom-0"
+              style={{
+                left: `${pct}%`,
+                width: 1,
+                backgroundColor: "var(--color-border)",
+                opacity: isMajor ? 0.3 : 0.1,
+              }}
+            />
+            <div
+              className="absolute left-0 right-0"
+              style={{
+                top: `${pct}%`,
+                height: 1,
+                backgroundColor: "var(--color-border)",
+                opacity: isMajor ? 0.3 : 0.1,
+              }}
+            />
+          </div>
+        );
+      })}
+    </div>
   );
 }

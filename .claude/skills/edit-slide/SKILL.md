@@ -37,7 +37,7 @@ Follow the user's prompt. You have full freedom to restructure the slide.
 | **Layout** | `SlideContainer`, `TwoColumnLayout`, `GridSection`, `CenterContent`, `Container`, `HeaderBar`, `Divider` |
 | **Typography** | `HeroTitle`, `SectionHeader`, `Eyebrow`, `BodyText`, `MonoText`, `TechCode`, `SectionMarker`, `Quote`, `ListItem`, `PipeList`, `Label`, `CategoryLabel`, `SlideNumber` |
 | **Cards** | `FeatureCard`, `StatCard`, `QuoteCard`, `InfoCard`, `ProcessCard` |
-| **Decorative** | `IndustrialIcon`, `IconRow`, `LogoMark`, `CategoryGrid`, `FeatureBlock`, `WireframeBox`, `IsometricGrid` |
+| **Decorative** | `IndustrialIcon`, `IconRow`, `LogoMark`, `CategoryGrid`, `FeatureBlock`, `CrosshairMark`, `RuleGrid` |
 
 **CSS variables** (via `style={{}}`, NOT Tailwind color classes):
 - Text: `var(--color-text-primary)`, `var(--color-text-secondary)`, `var(--color-text-muted)`

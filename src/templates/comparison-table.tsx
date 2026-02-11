@@ -110,7 +110,7 @@ export function ComparisonTableTemplate({
                 }}
               >
                 <div
-                  className="p-6 text-[20px]"
+                  className="p-6 text-[28px]"
                   style={{
                     fontFamily: "var(--font-body)",
                     color: "var(--color-text-primary)",

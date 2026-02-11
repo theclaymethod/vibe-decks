@@ -54,7 +54,7 @@ export function TimelineTemplate({
             }}
           >
             <div
-              className="absolute left-[14px] top-0 bottom-0 w-[3px]"
+              className="absolute left-[39px] top-0 bottom-0 w-[3px]"
               style={{ backgroundColor: "var(--color-border)" }}
             />
 

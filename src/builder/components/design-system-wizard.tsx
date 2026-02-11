@@ -138,8 +138,16 @@ export function DesignSystemWizard() {
   useEffect(() => {
     if (step === "execute" && generation.status === "complete") {
       setStep("complete");
+      fetch("http://localhost:3333/api/assess-design-system", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: buildDescription(),
+          imagePaths: inspiration.assets.map((a) => a.path),
+        }),
+      }).catch(() => {});
     }
-  }, [step, generation.status]);
+  }, [step, generation.status, buildDescription, inspiration.assets]);
 
   const canProceedToPlan =
     selectedPalette !== null ||

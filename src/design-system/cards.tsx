@@ -15,7 +15,7 @@ export function FeatureCard({
 }) {
   return (
     <div className={cn("p-6", className)}>
-      {icon && <div className="text-4xl mb-4">{icon}</div>}
+      {icon && <div className="text-[48px] mb-4">{icon}</div>}
       <h3
         className="text-[28px] uppercase mb-3"
         style={{

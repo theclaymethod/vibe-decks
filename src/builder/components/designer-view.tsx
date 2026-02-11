@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGeneration } from "../hooks/use-generation";
 import { useEditSession } from "../hooks/use-edit-session";
 import { useGrab } from "../hooks/use-grab";
 import { useResizable } from "../hooks/use-resizable";
 import { EditSidebar } from "./edit-sidebar";
 import { DesignerPreview } from "./designer-preview";
+import { DesignBriefModal } from "./design-brief-modal";
 
 const FILE_KEY = "design-system";
 
@@ -21,6 +22,16 @@ export function DesignerView() {
     containerRef: previewContainerRef,
     enabled: true,
   });
+
+  const [briefOpen, setBriefOpen] = useState(false);
+  const [briefContent, setBriefContent] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("http://localhost:3333/api/design-brief")
+      .then((r) => r.json())
+      .then((data: { content: string | null }) => setBriefContent(data.content))
+      .catch(() => {});
+  }, []);
 
   const generation = useGeneration();
   const { editDesignSystem } = generation;
@@ -96,6 +107,13 @@ export function DesignerView() {
         width={sidebar.width}
         isResizing={sidebar.isResizing}
         onResizeMouseDown={sidebar.handleMouseDown}
+        onOpenBrief={briefContent ? () => setBriefOpen(true) : undefined}
+      />
+
+      <DesignBriefModal
+        open={briefOpen}
+        content={briefContent}
+        onClose={() => setBriefOpen(false)}
       />
     </div>
   );

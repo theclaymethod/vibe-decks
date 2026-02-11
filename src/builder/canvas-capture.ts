@@ -1,62 +1,35 @@
-import type { CanvasBox } from "./types";
+import type Konva from "konva";
 
 const W = 1920;
 const H = 1080;
 
-export function captureCanvasAsDataUrl(boxes: CanvasBox[]): string {
-  const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d")!;
+export function captureStageAsDataUrl(stage: Konva.Stage | null): string | undefined {
+  if (!stage) return undefined;
 
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, W, H);
+  const prevScaleX = stage.scaleX();
+  const prevScaleY = stage.scaleY();
+  const prevWidth = stage.width();
+  const prevHeight = stage.height();
 
-  ctx.strokeStyle = "#e5e7eb";
-  ctx.setLineDash([8, 8]);
-  ctx.lineWidth = 1;
-  for (const f of [0.25, 0.5, 0.75]) {
-    ctx.beginPath();
-    ctx.moveTo(W * f, 0);
-    ctx.lineTo(W * f, H);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, H * f);
-    ctx.lineTo(W, H * f);
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
+  stage.scaleX(1);
+  stage.scaleY(1);
+  stage.width(W);
+  stage.height(H);
 
-  for (const box of boxes) {
-    ctx.fillStyle = box.color + "33";
-    ctx.fillRect(box.x, box.y, box.width, box.height);
+  const transformer = stage.findOne("Transformer");
+  const trWasVisible = transformer?.visible() ?? false;
+  transformer?.visible(false);
 
-    ctx.strokeStyle = box.color;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(box.x, box.y, box.width, box.height);
+  stage.batchDraw();
 
-    ctx.fillStyle = box.color;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+  const dataUrl = stage.toDataURL({ pixelRatio: 1 });
 
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(
-      box.label,
-      box.x + box.width / 2,
-      box.y + box.height / 2 - 12,
-      box.width - 16
-    );
+  transformer?.visible(trWasVisible);
+  stage.scaleX(prevScaleX);
+  stage.scaleY(prevScaleY);
+  stage.width(prevWidth);
+  stage.height(prevHeight);
+  stage.batchDraw();
 
-    ctx.font = "18px sans-serif";
-    ctx.globalAlpha = 0.6;
-    ctx.fillText(
-      box.type,
-      box.x + box.width / 2,
-      box.y + box.height / 2 + 16,
-      box.width - 16
-    );
-    ctx.globalAlpha = 1;
-  }
-
-  return canvas.toDataURL("image/png");
+  return dataUrl;
 }

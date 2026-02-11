@@ -14,19 +14,19 @@ function QuotePanel({
 }) {
   return (
     <motion.div
-      className="relative flex-1 overflow-hidden cursor-pointer"
+      className="group relative flex-1 overflow-hidden cursor-pointer"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay, ease: "easeOut" }}
       whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
     >
       <div
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-500"
+        className="absolute inset-0 bg-cover bg-center transition-all duration-700 grayscale group-hover:grayscale-0"
         style={{ backgroundImage: `url('${imageUrl}')` }}
       />
-      <div className="absolute inset-0 bg-black/60 transition-colors duration-300 hover:bg-black/50" />
+      <div className="absolute inset-0 bg-black/60 transition-colors duration-500 group-hover:bg-black/40" />
 
-      <div className="relative h-full flex flex-col justify-end p-12">
+      <div className="relative h-full flex flex-col justify-center p-12">
         <p
           className="text-[42px] leading-[1.1] uppercase mb-8"
           style={{

@@ -5,7 +5,6 @@ import type { GenerationStatus } from "../types";
 interface GenerationPanelProps {
   generatedPrompt: string;
   status: GenerationStatus;
-  output: string;
   error: string | null;
   onGenerate: (prompt: string, imageDataUrl?: string) => void;
   onCancel: () => void;
@@ -22,7 +21,6 @@ const STATUS_LABELS: Record<GenerationStatus, string> = {
 export function GenerationPanel({
   generatedPrompt,
   status,
-  output,
   error,
   onGenerate,
   onCancel,
@@ -36,7 +34,6 @@ export function GenerationPanel({
         Generation
       </h3>
 
-      {/* Prompt preview */}
       <div>
         <button
           onClick={() => setPromptExpanded((p) => !p)}
@@ -52,7 +49,6 @@ export function GenerationPanel({
         )}
       </div>
 
-      {/* Action buttons */}
       <div className="flex gap-2">
         {status === "generating" ? (
           <button
@@ -77,7 +73,6 @@ export function GenerationPanel({
         )}
       </div>
 
-      {/* Status */}
       <div className="flex items-center gap-2">
         <div
           className={cn(
@@ -93,17 +88,9 @@ export function GenerationPanel({
         </span>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
           {error}
-        </div>
-      )}
-
-      {/* Streaming output */}
-      {output && (
-        <div className="p-2 bg-neutral-50 border border-neutral-200 rounded text-xs text-neutral-700 whitespace-pre-wrap max-h-64 overflow-y-auto font-mono">
-          {output}
         </div>
       )}
     </div>

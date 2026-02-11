@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { spawn, type ChildProcess } from "node:child_process";
 import { resolve, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { mkdirSync, writeFileSync, readdirSync, statSync, unlinkSync, existsSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, readdirSync, statSync, unlinkSync, existsSync } from "node:fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "..");
@@ -478,6 +478,121 @@ const server = createServer(async (req, res) => {
       res.end(JSON.stringify({ ok: true }));
     } catch (err) {
       log("assets", `delete error: ${err}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }));
+    }
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/api/design-brief") {
+    log("design-brief", "read request");
+    const briefPath = resolve(PROJECT_ROOT, "src/design-system/design-brief.md");
+    if (existsSync(briefPath)) {
+      const content = readFileSync(briefPath, "utf-8");
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ content }));
+    } else {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ content: null }));
+    }
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/assess-design-system") {
+    log("assess-ds", "request received");
+    try {
+      const body = JSON.parse(await readBody(req));
+      const { description, imagePaths } = body as {
+        description: string;
+        imagePaths?: string[];
+      };
+
+      if (!description) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "description is required" }));
+        return;
+      }
+
+      const promptParts = [
+        "You are a design system assessor. Your job is to evaluate whether a generated design system aligns with the user's intent and inspiration references.",
+        "",
+        "## User's Design Intent",
+        description,
+        "",
+        "## Your Task",
+        "1. Read each inspiration image listed below (if any) to understand the visual reference",
+        "2. Read all design system files:",
+        "   - src/deck/theme.css",
+        "   - src/design-system/typography.tsx",
+        "   - src/design-system/layout.tsx",
+        "   - src/design-system/cards.tsx",
+        "   - src/design-system/decorative.tsx",
+        "   - src/design-system/showcase.tsx",
+        "3. Assess alignment between inspiration/intent and implementation",
+        "4. Write src/design-system/design-brief.md with this exact structure:",
+        "",
+        "```",
+        "# Design Brief",
+        "",
+        "## Intent",
+        "[Wizard selections — palette, typography, personality, custom notes]",
+        "",
+        "## Inspiration Analysis",
+        "[What you observe in the reference images — dominant colors, type style, spacing feel, mood/tone]",
+        "",
+        "## Assessment",
+        "",
+        "### Color Palette",
+        "[How theme.css variables align with inspiration. Specific hex comparisons.]",
+        "",
+        "### Typography",
+        "[Font choices vs. reference material feel]",
+        "",
+        "### Component Style",
+        "[Cards, decorative elements — do they match the intended mood?]",
+        "",
+        "### Alignment",
+        "[High/Medium/Low with reasoning]",
+        "",
+        "## Recommendations",
+        "[Specific actionable suggestions to improve alignment]",
+        "",
+        "## References",
+        "[List of inspiration image paths assessed]",
+        "```",
+        "",
+        "Write ONLY the design-brief.md file. Do not modify any other files.",
+      ];
+
+      if (imagePaths && imagePaths.length > 0) {
+        const absolutePaths = imagePaths.map((p) => resolve(PROJECT_ROOT, "public" + p));
+        promptParts.push("", "## Inspiration Images", ...absolutePaths.map((f) => `- ${f}`));
+        promptParts.push("Read each image above to analyze the visual style.");
+      }
+
+      log("assess-ds", `spawning background assessor, desc="${description.slice(0, 80)}..."`);
+
+      const claude = spawn(
+        "claude",
+        ["-p", promptParts.join("\n"), "--output-format", "stream-json", "--dangerously-skip-permissions"],
+        { cwd: PROJECT_ROOT, stdio: ["ignore", "pipe", "pipe"] }
+      );
+
+      claude.stdout?.on("data", (chunk: Buffer) => {
+        log("assess-ds", chunk.toString().slice(0, 200));
+      });
+      claude.stderr?.on("data", (chunk: Buffer) => {
+        const msg = chunk.toString().trim();
+        if (msg) log("assess-ds", `stderr: ${msg}`);
+      });
+      claude.on("close", (code) => {
+        log("assess-ds", `exited code=${code}`);
+      });
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      log("assess-ds", `error: ${err}`);
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }));
     }

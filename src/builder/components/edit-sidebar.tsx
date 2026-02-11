@@ -18,6 +18,7 @@ interface EditSidebarProps {
   width: number;
   isResizing: boolean;
   onResizeMouseDown: (e: React.MouseEvent) => void;
+  onOpenBrief?: () => void;
 }
 
 const STATUS_LABELS: Record<GenerationStatus, string> = {
@@ -39,6 +40,7 @@ export function EditSidebar({
   width,
   isResizing,
   onResizeMouseDown,
+  onOpenBrief,
 }: EditSidebarProps) {
   const [assetBrowserOpen, setAssetBrowserOpen] = useState(false);
 
@@ -60,12 +62,22 @@ export function EditSidebar({
             <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
               Design System
             </h3>
-            <Link
-              to="/builder"
-              className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors"
-            >
-              All Slides
-            </Link>
+            <div className="flex items-center gap-2">
+              {onOpenBrief && (
+                <button
+                  onClick={onOpenBrief}
+                  className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors"
+                >
+                  Brief
+                </button>
+              )}
+              <Link
+                to="/builder"
+                className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors"
+              >
+                All Slides
+              </Link>
+            </div>
           </div>
           <p className="text-sm text-neutral-600">
             Edit typography, layout, cards, and decorative components.
