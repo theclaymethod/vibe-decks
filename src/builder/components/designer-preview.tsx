@@ -54,6 +54,14 @@ export function DesignerPreview() {
 
   useLayoutEffect(() => {
     if (!contentRef.current || !scale) return;
+    const el = contentRef.current;
+    el.style.transform = "";
+    void el.offsetHeight;
+    el.style.transform = `scale(${scale})`;
+  });
+
+  useLayoutEffect(() => {
+    if (!contentRef.current || !scale) return;
 
     const updateHeight = () => {
       const contentHeight = contentRef.current?.scrollHeight ?? 0;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useGeneration } from "../hooks/use-generation";
 import { useEditSession } from "../hooks/use-edit-session";
+import { useGrab } from "../hooks/use-grab";
 import { useResizable } from "../hooks/use-resizable";
 import { EditSidebar } from "./edit-sidebar";
 import { DesignerPreview } from "./designer-preview";
@@ -13,6 +14,12 @@ export function DesignerView() {
     minWidth: 280,
     maxWidthPercent: 0.5,
     storageKey: "builder-designer-sidebar-width",
+  });
+
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const { grabbedContext, clearContext } = useGrab({
+    containerRef: previewContainerRef,
+    enabled: true,
   });
 
   const generation = useGeneration();
@@ -52,16 +59,26 @@ export function DesignerView() {
 
   const handleSendMessage = useCallback(
     (text: string) => {
-      addUserMessage(text);
+      let prompt = text;
+      if (grabbedContext) {
+        const loc = grabbedContext.lineNumber
+          ? `${grabbedContext.filePath}:${grabbedContext.lineNumber}`
+          : grabbedContext.filePath;
+        addUserMessage(`[${grabbedContext.componentName} — ${loc}]\n${text}`);
+        prompt = `[Selected Element]\nComponent: ${grabbedContext.componentName}\nFile: ${loc}\nHTML:\n${grabbedContext.htmlFrame}\n\n${text}`;
+        clearContext();
+      } else {
+        addUserMessage(text);
+      }
 
       const assistantMsg = addAssistantMessage(sessionIdRef.current ?? "");
       activeAssistantMsgId.current = assistantMsg.id;
 
-      editDesignSystem(text, sessionIdRef.current, (sid) => {
+      editDesignSystem(prompt, sessionIdRef.current, (sid) => {
         setSessionId(sid);
       });
     },
-    [addUserMessage, addAssistantMessage, setSessionId, editDesignSystem]
+    [addUserMessage, addAssistantMessage, setSessionId, editDesignSystem, grabbedContext, clearContext]
   );
 
   return (
@@ -74,6 +91,8 @@ export function DesignerView() {
         status={generation.status}
         onSendMessage={handleSendMessage}
         onClearHistory={clearHistory}
+        grabbedContext={grabbedContext}
+        onDismissContext={clearContext}
         width={sidebar.width}
         isResizing={sidebar.isResizing}
         onResizeMouseDown={sidebar.handleMouseDown}

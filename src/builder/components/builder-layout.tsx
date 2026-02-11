@@ -241,12 +241,16 @@ function EditView({ fileKey }: { fileKey: string }) {
 
   const handleSendMessage = useCallback(
     (text: string) => {
-      addUserMessage(text);
-
       let prompt = text;
       if (grabbedContext) {
-        prompt = `[Selected Element]\nComponent: ${grabbedContext.componentName}\nFile: ${grabbedContext.filePath}${grabbedContext.lineNumber ? `:${grabbedContext.lineNumber}` : ""}\nHTML:\n${grabbedContext.htmlFrame}\n\n${text}`;
+        const loc = grabbedContext.lineNumber
+          ? `${grabbedContext.filePath}:${grabbedContext.lineNumber}`
+          : grabbedContext.filePath;
+        addUserMessage(`[${grabbedContext.componentName} — ${loc}]\n${text}`);
+        prompt = `[Selected Element]\nComponent: ${grabbedContext.componentName}\nFile: ${loc}\nHTML:\n${grabbedContext.htmlFrame}\n\n${text}`;
         clearContext();
+      } else {
+        addUserMessage(text);
       }
 
       const assistantMsg = addAssistantMessage(sessionIdRef.current ?? "");
