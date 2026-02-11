@@ -14,7 +14,9 @@ You are an expert design system engineer for a slide deck application. You maint
 | `src/design-system/typography.tsx` | Text primitives: HeroTitle, SectionHeader, Eyebrow, BodyText, MonoText, TechCode, Quote, Label, ListItem, PipeList, CategoryLabel, SectionMarker |
 | `src/design-system/layout.tsx` | Structure: SlideContainer, Divider, TwoColumnLayout, GridSection, CenterContent, Container, HeaderBar |
 | `src/design-system/cards.tsx` | Content blocks: FeatureCard, StatCard, QuoteCard, InfoCard, ProcessCard |
-| `src/design-system/decorative.tsx` | Visual texture: IndustrialIcon, IconRow, LogoMark, WireframeBox, IsometricGrid, CategoryGrid, FeatureBlock |
+| `src/design-system/decorative.tsx` | Visual texture: IndustrialIcon, IconRow, LogoMark, CrosshairMark, RuleGrid, CategoryGrid, FeatureBlock |
+| `src/design-system/animations.ts` | Shared motion variants: fadeIn, slideUp, slideUpLarge, slideLeft, scaleIn, stagger container factory, hover presets |
+| `src/design-system/interactions.tsx` | Interactive wrappers: AccordionItem, ExpandableCard, HoverCard, HoverCaption, AnimatedEntry, StaggerContainer |
 | `src/design-system/index.ts` | Barrel exports — update when adding/removing components |
 | `src/design-system/showcase.tsx` | Brand bible — the canonical reference for the entire design language |
 | `src/design-system/CHANGELOG.md` | Append structured entries after every edit |
@@ -33,6 +35,9 @@ The showcase is NOT a Storybook component gallery. It is a designed brand brief 
 7. **Decorative Language** — Icons, wireframes, grids with usage guidance
 8. **Color Modes** — Dark and yellow mode demonstrations
 9. **Usage Guidelines** — Do/Avoid rules
+10. **Interactive Primitives** — HoverCard, AnimatedEntry, StaggerContainer demos
+11. **Expandable Patterns** — AccordionItem, ExpandableCard demos
+12. **Hover & Caption** — HoverCaption, lift comparison demos
 
 Each section uses `BriefSection` with a numbered header. Sections include prose explaining *why* — not just showing components.
 
@@ -50,8 +55,8 @@ Slides are authored at 1920px width but displayed scaled down. The showcase scro
 | Body text | 20px+ | `BodyText size="sm"` is the floor |
 | Decorative icon specimens | 48px / 32px / 20px inline | Component defaults (18/14/10px) are too small for showcase — use inline `text-[Npx]` |
 | IconRow specimens | 36px inline | Component default is 14px — override with `text-[36px]` |
-| WireframeBox specimens | `size="md"` minimum | `size="sm"` (w-24 = 96px) is too small when scaled |
-| IsometricGrid container | w-96 h-96 (384px) minimum | Was w-64 h-64 (256px) — too small |
+| CrosshairMark specimens | `size="md"` minimum | `size="sm"` (w-24 = 96px) is too small when scaled |
+| RuleGrid container | w-64 h-64 (256px) minimum | Needs enough area for grid lines to read |
 | TechCode labels | `size="sm"` (14px) OK for labels under specimens | These are secondary metadata |
 
 **Rule of thumb**: If a decorative component's default size was designed for use *within* a slide, it needs to be 2-3x larger in the showcase to remain visible at scaled-down display.
@@ -97,6 +102,23 @@ When adding colors:
   ## YYYY-MM-DD
   - Changed: [what] — [why]
   ```
+
+## Interaction Components
+
+Interactive wrappers live in `interactions.tsx` and shared motion presets in `animations.ts`. These follow "relaxed rules" — shadows, soft radii, and elevation are permitted to signal interactivity.
+
+### Key Principles
+- Wrappers compose around static components — never modify the wrapped component
+- Use `animations.ts` presets instead of defining new variants locally
+- Interactive showcase sections (9-11) must demonstrate behavior at showcase scale
+- HoverCard, HoverCaption, AnimatedEntry, StaggerContainer are the primary building blocks
+- AccordionItem and ExpandableCard handle progressive disclosure patterns
+
+### Adding New Interaction Components
+1. Add to `interactions.tsx`, import shared variants from `animations.ts`
+2. Export from `index.ts`
+3. Add to showcase sections 9-11 with prose context and representative demos
+4. Verify all 3 color modes work
 
 ## What NOT To Do
 

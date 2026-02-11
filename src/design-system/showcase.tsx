@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { motion } from "motion/react";
 import {
   SlideContainer,
   Divider,
@@ -5,6 +7,15 @@ import {
   GridSection,
   HeaderBar,
 } from "./layout";
+import {
+  HoverCard,
+  HoverCaption,
+  AnimatedEntry,
+  StaggerContainer,
+  AccordionItem,
+  ExpandableCard,
+} from "./interactions";
+import { slideUpVariants } from "./animations";
 import {
   HeroTitle,
   SectionHeader,
@@ -29,8 +40,8 @@ import {
   IndustrialIcon,
   IconRow,
   LogoMark,
-  WireframeBox,
-  IsometricGrid,
+  CrosshairMark,
+  RuleGrid,
   FeatureBlock,
   CategoryGrid,
 } from "./decorative";
@@ -127,6 +138,29 @@ function TypeSpecimen({
   );
 }
 
+function ReplayWrapper({ children }: { children: React.ReactNode }) {
+  const [key, setKey] = useState(0);
+
+  return (
+    <div>
+      <div key={key}>{children}</div>
+      <button
+        type="button"
+        onClick={() => setKey((k) => k + 1)}
+        className="mt-4 px-4 py-2 text-[16px] tracking-[0.1em] uppercase cursor-pointer"
+        style={{
+          fontFamily: "var(--font-mono)",
+          color: "var(--color-text-muted)",
+          backgroundColor: "transparent",
+          border: "1px solid var(--color-border-light)",
+        }}
+      >
+        ↻ Replay
+      </button>
+    </div>
+  );
+}
+
 export function DesignSystemShowcase() {
   return (
     <div style={{ width: 1920 }}>
@@ -181,7 +215,7 @@ export function DesignSystemShowcase() {
             }
             right={
               <div className="flex flex-col items-center justify-center gap-8">
-                <WireframeBox size="lg" />
+                <CrosshairMark size="lg" />
                 <CategoryGrid
                   items={[
                     { title: "Precision", icon: "cross" },
@@ -218,7 +252,7 @@ export function DesignSystemShowcase() {
           <GridSection columns={4} gap="lg" className="mb-12">
             <ColorSwatch name="Primary" value="#0A0A0A" cssVar="--color-text-primary" textDark={false} />
             <ColorSwatch name="Secondary" value="#333333" cssVar="--color-text-secondary" textDark={false} />
-            <ColorSwatch name="Muted" value="#666666" cssVar="--color-text-muted" textDark={false} />
+            <ColorSwatch name="Muted" value="#888888" cssVar="--color-text-muted" textDark={false} />
             <ColorSwatch name="Inverse" value="#FFFFFF" cssVar="--color-text-inverse" />
           </GridSection>
 
@@ -425,7 +459,7 @@ export function DesignSystemShowcase() {
         <BriefSection number={6} title="Decorative Language">
           <BodyText className="mb-10 max-w-[1000px]">
             Decoration is restrained and systematic. Industrial icons are typographic glyphs —
-            not illustrations. Wireframe boxes and isometric grids provide visual texture
+            not illustrations. Registration marks and rule grids provide visual texture
             without competing with content. These elements say "precision engineering"
             without saying a word.
           </BodyText>
@@ -472,15 +506,15 @@ export function DesignSystemShowcase() {
 
           <Eyebrow className="mb-6">Structural Elements</Eyebrow>
           <BodyText size="sm" className="mb-4">
-            Wireframe boxes and isometric grids add technical texture to layouts.
+            Registration marks and rule grids add technical texture to layouts.
             Use sparingly — as background elements or visual anchors, never as primary content.
           </BodyText>
           <div className="flex items-center gap-16 mb-12">
-            <WireframeBox size="md" />
-            <WireframeBox size="lg" />
-            <WireframeBox className="w-96 h-96" />
-            <div className="w-96 h-96">
-              <IsometricGrid />
+            <CrosshairMark size="sm" />
+            <CrosshairMark size="md" />
+            <CrosshairMark size="lg" />
+            <div className="w-64 h-64">
+              <RuleGrid />
             </div>
           </div>
 
@@ -588,6 +622,274 @@ export function DesignSystemShowcase() {
               </div>
             }
           />
+        </BriefSection>
+      </SlideContainer>
+
+      {/* 09 — Interactive Primitives */}
+      <SlideContainer mode="white" className="h-auto min-h-[1080px]">
+        <BriefSection number={9} title="Interactive Primitives">
+          <BodyText className="mb-6 max-w-[1000px]">
+            Interactive behavior is composed via wrappers — static components stay untouched.
+            Wrap any card or block in a HoverCard to add lift and shadow on hover, or in an
+            AnimatedEntry to fade in on mount. Interactive states follow "relaxed rules" — shadows
+            and soft radii are permitted to signal interactivity.
+          </BodyText>
+          <BodyText size="sm" className="mb-10 max-w-[1000px]">
+            These wrappers compose around existing primitives. A FeatureCard inside a HoverCard
+            gains hover behavior without any changes to the card itself.
+          </BodyText>
+
+          <Eyebrow className="mb-6">Hover Card — Lift Amounts</Eyebrow>
+          <BodyText size="sm" className="mb-4">
+            Three lift presets: sm (-4px), md (-8px), lg (-12px). Shadow enabled by default.
+          </BodyText>
+          <GridSection columns={3} className="mb-16">
+            <HoverCard lift="sm">
+              <FeatureCard
+                icon={<IndustrialIcon symbol="star" size="lg" />}
+                title="Small Lift"
+                description="Subtle elevation for dense layouts. Lift: -4px."
+                className="border-2"
+              />
+            </HoverCard>
+            <HoverCard lift="md">
+              <FeatureCard
+                icon={<IndustrialIcon symbol="cross" size="lg" />}
+                title="Medium Lift"
+                description="Default. Good for card grids. Lift: -8px."
+                className="border-2"
+              />
+            </HoverCard>
+            <HoverCard lift="lg">
+              <FeatureCard
+                icon={<IndustrialIcon symbol="arrow" size="lg" />}
+                title="Large Lift"
+                description="Dramatic hover for hero cards. Lift: -12px."
+                className="border-2"
+              />
+            </HoverCard>
+          </GridSection>
+
+          <Eyebrow className="mb-6">Animated Entry + Stagger</Eyebrow>
+          <BodyText size="sm" className="mb-4">
+            AnimatedEntry fades/slides children on mount. StaggerContainer sequences children
+            so they animate in one after another.
+          </BodyText>
+          <ReplayWrapper>
+            <StaggerContainer stagger={0.15} delay={0} className="grid grid-cols-4 gap-6">
+              <motion.div variants={slideUpVariants}>
+                <StatCard value="99%" label="Uptime" className="border-2" />
+              </motion.div>
+              <motion.div variants={slideUpVariants}>
+                <StatCard value="2.4M" label="Users" className="border-2" />
+              </motion.div>
+              <motion.div variants={slideUpVariants}>
+                <StatCard value="<50ms" label="Latency" className="border-2" />
+              </motion.div>
+              <motion.div variants={slideUpVariants}>
+                <StatCard value="150+" label="Countries" className="border-2" />
+              </motion.div>
+            </StaggerContainer>
+          </ReplayWrapper>
+        </BriefSection>
+      </SlideContainer>
+
+      {/* 10 — Expandable Patterns */}
+      <SlideContainer mode="white" className="h-auto min-h-[1080px]">
+        <BriefSection number={10} title="Expandable Patterns">
+          <BodyText className="mb-6 max-w-[1000px]">
+            Progressive disclosure keeps interfaces clean. Accordion items collapse and expand
+            on click — ideal for FAQ sections, settings panels, and long-form content that
+            should not all be visible at once. Expandable cards zoom inline to reveal detail
+            without navigating away.
+          </BodyText>
+          <BodyText size="sm" className="mb-10 max-w-[1000px]">
+            Use accordions when content is mutually exclusive or secondary. Use expandable cards
+            when the preview itself is the primary content and the detail is supplementary.
+          </BodyText>
+
+          <Eyebrow className="mb-6">Accordion</Eyebrow>
+          <div className="max-w-[900px] mb-16">
+            <AccordionItem
+              trigger={
+                <span
+                  className="text-[24px] uppercase"
+                  style={{ fontFamily: "var(--font-heading)", color: "var(--color-text-primary)" }}
+                >
+                  What design principles guide this system?
+                </span>
+              }
+            >
+              <BodyText size="sm">
+                Precision over decoration. The system uses high-contrast black and white,
+                sharp geometry, and generous negative space. Every element earns its place —
+                no gradients, no blur, no rounded corners on static components. Interactive
+                states get relaxed rules: shadows and soft radii signal that an element responds
+                to user input.
+              </BodyText>
+            </AccordionItem>
+            <AccordionItem
+              trigger={
+                <span
+                  className="text-[24px] uppercase"
+                  style={{ fontFamily: "var(--font-heading)", color: "var(--color-text-primary)" }}
+                >
+                  How do color modes work?
+                </span>
+              }
+            >
+              <BodyText size="sm">
+                Three modes — white, dark, and yellow — controlled by CSS custom properties.
+                Components never reference literal colors. A single data attribute on the
+                SlideContainer switches the entire palette. Interactive wrappers inherit
+                the active mode automatically.
+              </BodyText>
+            </AccordionItem>
+            <AccordionItem
+              trigger={
+                <span
+                  className="text-[24px] uppercase"
+                  style={{ fontFamily: "var(--font-heading)", color: "var(--color-text-primary)" }}
+                >
+                  Can I nest interactive wrappers?
+                </span>
+              }
+            >
+              <BodyText size="sm">
+                Yes. A HoverCard can wrap an ExpandableCard. A StaggerContainer can contain
+                AnimatedEntry children. Wrappers are composable by design — they add behavior
+                without modifying the wrapped component.
+              </BodyText>
+            </AccordionItem>
+          </div>
+
+          <Eyebrow className="mb-6">Expandable Card</Eyebrow>
+          <BodyText size="sm" className="mb-4">
+            Click the card to expand. Click again or click outside to collapse.
+          </BodyText>
+          <div className="max-w-[600px] mb-12">
+            <ExpandableCard
+              className="border-2"
+              preview={
+                <FeatureCard
+                  icon={<IndustrialIcon symbol="plus" size="lg" />}
+                  title="Expandable Feature"
+                  description="Click to reveal additional detail below."
+                />
+              }
+              detail={
+                <div className="px-6 pb-6">
+                  <Divider thickness="thin" className="mb-4" />
+                  <BodyText size="sm">
+                    The expanded state reveals supplementary content inline. Layout animations
+                    keep the transition smooth. The card gains an elevated shadow to reinforce
+                    the active state. This pattern works well for feature lists where each
+                    item has a short preview and a longer explanation.
+                  </BodyText>
+                </div>
+              }
+            />
+          </div>
+        </BriefSection>
+      </SlideContainer>
+
+      {/* 11 — Hover & Caption */}
+      <SlideContainer mode="white" className="h-auto min-h-[1080px]">
+        <BriefSection number={11} title="Hover & Caption">
+          <BodyText className="mb-6 max-w-[1000px]">
+            Micro-interactions add delight without clutter. Hover captions slide in from the
+            edge of a container on mouse enter — ideal for image galleries, portfolio grids,
+            and any layout where descriptive text should appear on demand rather than
+            permanently.
+          </BodyText>
+          <BodyText size="sm" className="mb-10 max-w-[1000px]">
+            The dark overlay (rgba(0,0,0,0.85)) ensures caption text remains legible regardless
+            of the content beneath. Position can be top or bottom.
+          </BodyText>
+
+          <Eyebrow className="mb-6">Hover Caption</Eyebrow>
+          <BodyText size="sm" className="mb-4">
+            Hover over the blocks below to reveal captions.
+          </BodyText>
+          <GridSection columns={3} className="mb-16">
+            <HoverCaption
+              caption={
+                <span
+                  className="text-[18px]"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  Caption from bottom — default position
+                </span>
+              }
+            >
+              <div
+                className="h-48 flex items-center justify-center"
+                style={{ backgroundColor: "var(--color-bg-secondary)" }}
+              >
+                <SectionHeader className="text-[36px]">Block A</SectionHeader>
+              </div>
+            </HoverCaption>
+            <HoverCaption
+              position="top"
+              caption={
+                <span
+                  className="text-[18px]"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  Caption from top
+                </span>
+              }
+            >
+              <div
+                className="h-48 flex items-center justify-center"
+                style={{ backgroundColor: "var(--color-yellow)" }}
+              >
+                <SectionHeader className="text-[36px]">Block B</SectionHeader>
+              </div>
+            </HoverCaption>
+            <HoverCaption
+              caption={
+                <span
+                  className="text-[18px]"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  Works on any content
+                </span>
+              }
+            >
+              <div
+                className="h-48 flex items-center justify-center"
+                style={{ backgroundColor: "var(--color-bg-dark)", color: "var(--color-white)" }}
+              >
+                <SectionHeader className="text-[36px]">Block C</SectionHeader>
+              </div>
+            </HoverCaption>
+          </GridSection>
+
+          <Eyebrow className="mb-6">Lift Comparison on Stat Cards</Eyebrow>
+          <BodyText size="sm" className="mb-4">
+            sm, md, and lg lift amounts compared side by side on stat cards.
+          </BodyText>
+          <GridSection columns={3} className="mb-12">
+            <div className="text-center">
+              <HoverCard lift="sm">
+                <StatCard value="SM" label="Lift -4px" className="border-2" />
+              </HoverCard>
+              <TechCode size="sm" className="mt-3">lift="sm"</TechCode>
+            </div>
+            <div className="text-center">
+              <HoverCard lift="md">
+                <StatCard value="MD" label="Lift -8px" className="border-2" />
+              </HoverCard>
+              <TechCode size="sm" className="mt-3">lift="md"</TechCode>
+            </div>
+            <div className="text-center">
+              <HoverCard lift="lg">
+                <StatCard value="LG" label="Lift -12px" className="border-2" />
+              </HoverCard>
+              <TechCode size="sm" className="mt-3">lift="lg"</TechCode>
+            </div>
+          </GridSection>
         </BriefSection>
       </SlideContainer>
 

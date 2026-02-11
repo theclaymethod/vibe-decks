@@ -6,7 +6,7 @@
 
   --color-text-primary: var(--color-black);
   --color-text-secondary: #333333;
-  --color-text-muted: #666666;
+  --color-text-muted: #888888;
   --color-text-inverse: var(--color-white);
 
   --color-bg-primary: var(--color-white);
@@ -28,6 +28,22 @@
   --border-heavy: 4px;
 
   --radius-none: 0;
+
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
 }
 
 [data-slide-mode="dark"] {
@@ -57,7 +73,7 @@
   --color-bg-secondary: #F5F5F5;
   --color-text-primary: var(--color-black);
   --color-text-secondary: #333333;
-  --color-text-muted: #666666;
+  --color-text-muted: #888888;
   --color-text-inverse: var(--color-white);
   --color-border: var(--color-black);
   --color-border-light: #CCCCCC;

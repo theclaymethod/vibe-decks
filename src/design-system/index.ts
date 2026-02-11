@@ -1,5 +1,16 @@
 export type { SlideMode } from "./typography";
 
+export * from "./animations";
+
+export {
+  AccordionItem,
+  ExpandableCard,
+  HoverCard,
+  HoverCaption,
+  AnimatedEntry,
+  StaggerContainer,
+} from "./interactions";
+
 export {
   HeroTitle,
   SectionHeader,
@@ -44,6 +55,6 @@ export {
   MenuIcon,
   CategoryGrid,
   FeatureBlock,
-  WireframeBox,
-  IsometricGrid,
+  CrosshairMark,
+  RuleGrid,
 } from "./decorative";
