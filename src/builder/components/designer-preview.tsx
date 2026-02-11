@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { deckConfig } from "../../../deck.config";
+import { PreviewErrorBoundary } from "./preview-error-boundary";
 
 const DESIGN_WIDTH = deckConfig.design.width;
 
@@ -69,22 +70,24 @@ export function DesignerPreview() {
   return (
     <div className="flex-1 overflow-y-auto p-4" ref={wrapperRef}>
       {scale && Showcase && (
-        <div style={{ height: scaledHeight, position: "relative" }}>
-          <div
-            ref={contentRef}
-            key={version}
-            style={{
-              width: DESIGN_WIDTH,
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
-              position: "absolute",
-              top: 0,
-              left: 0,
-            }}
-          >
-            <Showcase />
+        <PreviewErrorBoundary resetKey={version}>
+          <div style={{ height: scaledHeight, position: "relative" }}>
+            <div
+              ref={contentRef}
+              key={version}
+              style={{
+                width: DESIGN_WIDTH,
+                transform: `scale(${scale})`,
+                transformOrigin: "top left",
+                position: "absolute",
+                top: 0,
+                left: 0,
+              }}
+            >
+              <Showcase />
+            </div>
           </div>
-        </div>
+        </PreviewErrorBoundary>
       )}
     </div>
   );
