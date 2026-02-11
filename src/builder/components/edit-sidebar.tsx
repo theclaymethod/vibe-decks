@@ -1,17 +1,16 @@
 import { cn } from "@/lib/utils";
-import type { GenerationStatus, SlideEditInfo } from "../types";
+import type { GenerationStatus, ChatMessage, GrabbedContext } from "../types";
 import { SlidePicker } from "./slide-picker";
 import { ChatThread } from "./chat-thread";
-import type { ChatMessage } from "../types";
 
 interface EditSidebarProps {
-  selectedFileKey: string | null;
+  selectedFileKey: string;
   messages: ChatMessage[];
   status: GenerationStatus;
-  onSelectSlide: (info: SlideEditInfo) => void;
-  onNewSlide: () => void;
   onSendMessage: (text: string) => void;
   onClearHistory: () => void;
+  grabbedContext?: GrabbedContext | null;
+  onDismissContext?: () => void;
 }
 
 const STATUS_LABELS: Record<GenerationStatus, string> = {
@@ -25,18 +24,14 @@ export function EditSidebar({
   selectedFileKey,
   messages,
   status,
-  onSelectSlide,
-  onNewSlide,
   onSendMessage,
   onClearHistory,
+  grabbedContext,
+  onDismissContext,
 }: EditSidebarProps) {
   return (
     <div className="w-80 border-l border-neutral-200 bg-white flex flex-col p-4">
-      <SlidePicker
-        selectedFileKey={selectedFileKey}
-        onSelect={onSelectSlide}
-        onNewSlide={onNewSlide}
-      />
+      <SlidePicker selectedFileKey={selectedFileKey} />
 
       <hr className="border-neutral-100 my-4" />
 
@@ -45,6 +40,8 @@ export function EditSidebar({
         isGenerating={status === "generating"}
         onSend={onSendMessage}
         onClear={onClearHistory}
+        grabbedContext={grabbedContext}
+        onDismissContext={onDismissContext}
       />
 
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">

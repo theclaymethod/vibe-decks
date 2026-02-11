@@ -1,29 +1,18 @@
+import { Link, useNavigate } from "@tanstack/react-router";
 import { SLIDE_CONFIG } from "@/deck/config";
-import type { SlideEditInfo } from "../types";
 
 interface SlidePickerProps {
   selectedFileKey: string | null;
-  onSelect: (info: SlideEditInfo) => void;
-  onNewSlide: () => void;
 }
 
-export function SlidePicker({
-  selectedFileKey,
-  onSelect,
-  onNewSlide,
-}: SlidePickerProps) {
+export function SlidePicker({ selectedFileKey }: SlidePickerProps) {
+  const navigate = useNavigate();
+
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const fileKey = e.target.value;
-    if (!fileKey) return;
-    const index = SLIDE_CONFIG.findIndex((s) => s.fileKey === fileKey);
-    if (index === -1) return;
-    const slide = SLIDE_CONFIG[index];
-    onSelect({
-      slideNumber: index + 1,
-      fileKey: slide.fileKey,
-      filePath: `src/deck/slides/${slide.fileKey}.tsx`,
-      title: slide.title,
-    });
+    if (fileKey) {
+      navigate({ to: "/builder/$fileKey", params: { fileKey } });
+    }
   };
 
   return (
@@ -32,12 +21,12 @@ export function SlidePicker({
         <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
           Slide
         </h3>
-        <button
-          onClick={onNewSlide}
+        <Link
+          to="/builder"
           className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors"
         >
-          + New
-        </button>
+          All Slides
+        </Link>
       </div>
       <select
         value={selectedFileKey ?? ""}

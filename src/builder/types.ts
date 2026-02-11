@@ -66,8 +66,6 @@ export const TEMPLATES = [
 export const MIN_BOX_WIDTH = 100;
 export const MIN_BOX_HEIGHT = 60;
 
-export type BuilderMode = "create" | "edit";
-
 export type ChatMessageStatus = "pending" | "streaming" | "complete" | "error";
 
 export interface ChatMessage {
@@ -79,15 +77,17 @@ export interface ChatMessage {
   status: ChatMessageStatus;
 }
 
-export interface SlideEditInfo {
-  slideNumber: number;
-  fileKey: string;
-  filePath: string;
-  title: string;
-}
-
 export interface EditSession {
   slideFileKey: string;
   sessionId: string | null;
   messages: ChatMessage[];
+}
+
+export interface GrabbedContext {
+  componentName: string;
+  filePath: string;
+  lineNumber: number | null;
+  columnNumber: number | null;
+  htmlFrame: string;
+  rawContent: string;
 }

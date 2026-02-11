@@ -1,22 +1,55 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { TOTAL_SLIDES } from "@/deck/config";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import type Konva from "konva";
+import { SLIDE_CONFIG, TOTAL_SLIDES } from "@/deck/config";
 import { useCanvasBoxes } from "../hooks/use-canvas-boxes";
 import { usePromptGenerator } from "../hooks/use-prompt-generator";
 import { useGeneration } from "../hooks/use-generation";
 import { useEditSession } from "../hooks/use-edit-session";
-import { captureCanvasAsDataUrl } from "../canvas-capture";
+import { useGrab } from "../hooks/use-grab";
+import { captureStageAsDataUrl } from "../canvas-capture";
 import { Canvas } from "./canvas";
 import { BoxProperties } from "./box-properties";
 import { PromptPanel } from "./prompt-panel";
 import { GenerationPanel } from "./generation-panel";
+import { GenerationOutput } from "./generation-output";
 import { SlidePreview } from "./slide-preview";
-import { SlidePicker } from "./slide-picker";
 import { EditSidebar } from "./edit-sidebar";
-import type { BuilderMode, SlideEditInfo } from "../types";
 
-export function BuilderLayout() {
-  const [mode, setMode] = useState<BuilderMode>("create");
-  const [editSlide, setEditSlide] = useState<SlideEditInfo | null>(null);
+interface BuilderLayoutProps {
+  fileKey: string;
+}
+
+function resolveEditInfo(fileKey: string) {
+  const index = SLIDE_CONFIG.findIndex((s) => s.fileKey === fileKey);
+  if (index !== -1) {
+    const slide = SLIDE_CONFIG[index];
+    return {
+      slideNumber: index + 1,
+      fileKey: slide.fileKey,
+      filePath: `src/deck/slides/${slide.fileKey}.tsx`,
+      title: slide.title,
+    };
+  }
+  const slideNumber = parseInt(fileKey.slice(0, 2), 10) || 0;
+  return {
+    slideNumber,
+    fileKey,
+    filePath: `src/deck/slides/${fileKey}.tsx`,
+    title: fileKey,
+  };
+}
+
+export function BuilderLayout({ fileKey }: BuilderLayoutProps) {
+  if (fileKey === "new") {
+    return <CreateView />;
+  }
+  return <EditView fileKey={fileKey} />;
+}
+
+function CreateView() {
+  const navigate = useNavigate();
+  const stageRef = useRef<Konva.Stage>(null);
 
   const {
     boxes,
@@ -48,137 +81,54 @@ export function BuilderLayout() {
   });
 
   const generation = useGeneration();
-  const { edit: editSlideViaChat } = generation;
 
-  const editSession = useEditSession(editSlide?.fileKey ?? null);
-  const {
-    messages: editMessages,
-    sessionId: editSessionId,
-    addUserMessage,
-    addAssistantMessage,
-    updateMessage,
-    setSessionId,
-    clearHistory,
-  } = editSession;
+  const renameBox = useCallback(
+    (id: string, label: string) => updateBox(id, { label }),
+    [updateBox]
+  );
 
   const captureImage = useCallback(() => {
     if (boxes.length === 0) return undefined;
-    return captureCanvasAsDataUrl(boxes);
+    return captureStageAsDataUrl(stageRef.current);
   }, [boxes]);
 
   useEffect(() => {
-    if (mode !== "create" || generation.status !== "complete") return;
+    if (generation.status !== "complete") return;
 
     const output = generation.output;
     const fileKeyMatch = output.match(/(\d{2}-[\w-]+)\.tsx/);
     if (fileKeyMatch) {
-      const fileKey = fileKeyMatch[1];
-      const slideNumber = parseInt(fileKey.slice(0, 2), 10);
-      setEditSlide({
-        slideNumber,
-        fileKey,
-        filePath: `src/deck/slides/${fileKey}.tsx`,
-        title: slideName || fileKey,
+      navigate({
+        to: "/builder/$fileKey",
+        params: { fileKey: fileKeyMatch[1] },
       });
-      setMode("edit");
     }
-  }, [mode, generation.status, generation.output, slideName]);
-
-  const handleSelectSlide = useCallback((info: SlideEditInfo) => {
-    setEditSlide(info);
-    setMode("edit");
-  }, []);
-
-  const handleNewSlide = useCallback(() => {
-    setMode("create");
-    setEditSlide(null);
-  }, []);
-
-  const activeAssistantMsgId = useRef<string | null>(null);
-  const sessionIdRef = useRef(editSessionId);
-  sessionIdRef.current = editSessionId;
-
-  useEffect(() => {
-    const msgId = activeAssistantMsgId.current;
-    if (!msgId) return;
-
-    if (generation.output) {
-      updateMessage(msgId, { text: generation.output });
-    }
-
-    if (generation.status === "complete" || generation.status === "error") {
-      updateMessage(msgId, {
-        text: generation.output || "(no response)",
-        status: generation.status === "error" ? "error" : "complete",
-      });
-      activeAssistantMsgId.current = null;
-    }
-  }, [generation.output, generation.status, updateMessage]);
-
-  const handleSendMessage = useCallback(
-    (text: string) => {
-      if (!editSlide) return;
-
-      addUserMessage(text);
-
-      const assistantMsg = addAssistantMessage(sessionIdRef.current ?? "");
-      activeAssistantMsgId.current = assistantMsg.id;
-
-      editSlideViaChat(
-        text,
-        editSlide.filePath,
-        sessionIdRef.current,
-        (sid) => {
-          setSessionId(sid);
-        }
-      );
-    },
-    [editSlide, addUserMessage, addAssistantMessage, setSessionId, editSlideViaChat]
-  );
-
-  if (mode === "edit" && editSlide) {
-    return (
-      <div className="h-screen flex bg-neutral-50">
-        <SlidePreview
-          fileKey={editSlide.fileKey}
-          slideNumber={editSlide.slideNumber}
-        />
-
-        <EditSidebar
-          selectedFileKey={editSlide.fileKey}
-          messages={editMessages}
-          status={generation.status}
-          onSelectSlide={handleSelectSlide}
-          onNewSlide={handleNewSlide}
-          onSendMessage={handleSendMessage}
-          onClearHistory={clearHistory}
-        />
-      </div>
-    );
-  }
+  }, [generation.status, generation.output, navigate]);
 
   return (
     <div className="h-screen flex bg-neutral-50">
       <div className="flex-1 flex items-center justify-center p-4">
-        <Canvas
-          boxes={boxes}
-          selectedBoxId={selectedBoxId}
-          onAddBox={addBox}
-          onSelectBox={selectBox}
-          onMoveBox={moveBox}
-          onResizeBox={resizeBox}
-        />
+        {generation.status === "idle" ? (
+          <Canvas
+            boxes={boxes}
+            selectedBoxId={selectedBoxId}
+            onAddBox={addBox}
+            onSelectBox={selectBox}
+            onMoveBox={moveBox}
+            onResizeBox={resizeBox}
+            onRenameBox={renameBox}
+            onDeleteBox={deleteBox}
+            stageRef={stageRef}
+          />
+        ) : (
+          <GenerationOutput
+            output={generation.output}
+            status={generation.status}
+          />
+        )}
       </div>
 
       <div className="w-80 border-l border-neutral-200 bg-white overflow-y-auto p-4 space-y-6">
-        <SlidePicker
-          selectedFileKey={null}
-          onSelect={handleSelectSlide}
-          onNewSlide={handleNewSlide}
-        />
-
-        <hr className="border-neutral-100" />
-
         {selectedBox && (
           <>
             <BoxProperties
@@ -210,13 +160,102 @@ export function BuilderLayout() {
         <GenerationPanel
           generatedPrompt={generatedPrompt}
           status={generation.status}
-          output={generation.output}
           error={generation.error}
           onGenerate={generation.generate}
           onCancel={generation.cancel}
           captureImage={captureImage}
         />
       </div>
+    </div>
+  );
+}
+
+function EditView({ fileKey }: { fileKey: string }) {
+  const editSlide = useMemo(() => resolveEditInfo(fileKey), [fileKey]);
+
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const { grabbedContext, clearContext } = useGrab({
+    containerRef: previewContainerRef,
+    enabled: true,
+  });
+
+  const generation = useGeneration();
+  const { edit: editSlideViaChat } = generation;
+
+  const editSession = useEditSession(editSlide.fileKey);
+  const {
+    messages: editMessages,
+    sessionId: editSessionId,
+    addUserMessage,
+    addAssistantMessage,
+    updateMessage,
+    setSessionId,
+    clearHistory,
+  } = editSession;
+
+  const activeAssistantMsgId = useRef<string | null>(null);
+  const sessionIdRef = useRef(editSessionId);
+  sessionIdRef.current = editSessionId;
+
+  useEffect(() => {
+    const msgId = activeAssistantMsgId.current;
+    if (!msgId) return;
+
+    if (generation.output) {
+      updateMessage(msgId, { text: generation.output });
+    }
+
+    if (generation.status === "complete" || generation.status === "error") {
+      updateMessage(msgId, {
+        text: generation.output || "(no response)",
+        status: generation.status === "error" ? "error" : "complete",
+      });
+      activeAssistantMsgId.current = null;
+    }
+  }, [generation.output, generation.status, updateMessage]);
+
+  const handleSendMessage = useCallback(
+    (text: string) => {
+      addUserMessage(text);
+
+      let prompt = text;
+      if (grabbedContext) {
+        prompt = `[Selected Element]\nComponent: ${grabbedContext.componentName}\nFile: ${grabbedContext.filePath}${grabbedContext.lineNumber ? `:${grabbedContext.lineNumber}` : ""}\nHTML:\n${grabbedContext.htmlFrame}\n\n${text}`;
+        clearContext();
+      }
+
+      const assistantMsg = addAssistantMessage(sessionIdRef.current ?? "");
+      activeAssistantMsgId.current = assistantMsg.id;
+
+      editSlideViaChat(
+        prompt,
+        editSlide.filePath,
+        sessionIdRef.current,
+        (sid) => {
+          setSessionId(sid);
+        }
+      );
+    },
+    [editSlide, addUserMessage, addAssistantMessage, setSessionId, editSlideViaChat, grabbedContext, clearContext]
+  );
+
+  return (
+    <div className="h-screen flex bg-neutral-50">
+      <SlidePreview
+        fileKey={editSlide.fileKey}
+        slideNumber={editSlide.slideNumber}
+        containerRef={previewContainerRef}
+      />
+
+      <EditSidebar
+        selectedFileKey={editSlide.fileKey}
+        messages={editMessages}
+        status={generation.status}
+        onSendMessage={handleSendMessage}
+        onClearHistory={clearHistory}
+        grabbedContext={grabbedContext}
+        onDismissContext={clearContext}
+      />
     </div>
   );
 }
