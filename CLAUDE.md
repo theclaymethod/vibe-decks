@@ -163,3 +163,8 @@ Deploys to Cloudflare Workers via the deploy button or `wrangler deploy`.
 - All slides import templates from `@/templates`
 - Template variants: `light`, `dark`, `cream`, `primary`
 - Mode props control color schemes within templates
+
+## Workflow Rules
+
+- **Commit after every change.** Include the high-level user instructions in the commit message so the history is readable.
+- **Revert on breakage.** At some point you WILL introduce a breaking change. When this happens, revert to the previous working commit rather than spending a lot of time debugging a broken path.
