@@ -276,7 +276,7 @@ export function useGeneration() {
 
   const createDesignSystem = useCallback(
     async (
-      body: { description: string; urls?: string[]; images?: string[]; planOnly?: boolean },
+      body: { description: string; urls?: string[]; images?: string[]; imagePaths?: string[]; planOnly?: boolean },
       onSession?: (sessionId: string) => void
     ) => {
       await streamRequest(

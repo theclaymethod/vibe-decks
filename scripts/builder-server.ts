@@ -296,10 +296,11 @@ const server = createServer(async (req, res) => {
     log("create-ds", "request received");
     try {
       const body = JSON.parse(await readBody(req));
-      const { description, urls, images, planOnly } = body as {
+      const { description, urls, images, imagePaths, planOnly } = body as {
         description: string;
         urls?: string[];
         images?: string[];
+        imagePaths?: string[];
         planOnly?: boolean;
       };
 
@@ -312,7 +313,9 @@ const server = createServer(async (req, res) => {
       log("create-ds", `desc: "${description.slice(0, 80)}..." planOnly=${planOnly ?? false}`);
 
       let imageFiles: string[] = [];
-      if (images && images.length > 0) {
+      if (imagePaths && imagePaths.length > 0) {
+        imageFiles = imagePaths.map((p) => resolve(PROJECT_ROOT, "public" + p));
+      } else if (images && images.length > 0) {
         mkdirSync(WIREFRAME_DIR, { recursive: true });
         imageFiles = images.map((img, i) => {
           const path = resolve(WIREFRAME_DIR, `ds-ref-${i}.png`);
@@ -368,13 +371,16 @@ const server = createServer(async (req, res) => {
     log("assets", "upload request");
     try {
       const body = JSON.parse(await readBody(req));
-      const { filename: rawName, data } = body as { filename: string; data: string };
+      const { filename: rawName, data, folder } = body as { filename: string; data: string; folder?: string };
 
       if (!rawName || !data) {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "filename and data are required" }));
         return;
       }
+
+      const targetDir = folder ? resolve(ASSETS_DIR, folder) : ASSETS_DIR;
+      const urlPrefix = folder ? `/assets/${folder}` : "/assets";
 
       const sanitized = rawName
         .replace(/\s+/g, "-")
@@ -383,21 +389,21 @@ const server = createServer(async (req, res) => {
 
       const ext = extname(sanitized);
       const base = sanitized.slice(0, sanitized.length - ext.length) || "file";
-      mkdirSync(ASSETS_DIR, { recursive: true });
+      mkdirSync(targetDir, { recursive: true });
 
       let finalName = sanitized;
-      if (existsSync(resolve(ASSETS_DIR, finalName))) {
+      if (existsSync(resolve(targetDir, finalName))) {
         finalName = `${base}-${Date.now()}${ext}`;
       }
 
       const base64 = data.replace(/^data:[^;]+;base64,/, "");
       const buffer = Buffer.from(base64, "base64");
-      const filePath = resolve(ASSETS_DIR, finalName);
+      const filePath = resolve(targetDir, finalName);
       writeFileSync(filePath, buffer);
 
-      log("assets", `uploaded ${finalName} (${buffer.length} bytes)`);
+      log("assets", `uploaded ${folder ? folder + "/" : ""}${finalName} (${buffer.length} bytes)`);
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ path: `/assets/${finalName}`, filename: finalName, size: buffer.length }));
+      res.end(JSON.stringify({ path: `${urlPrefix}/${finalName}`, filename: finalName, size: buffer.length }));
     } catch (err) {
       log("assets", `upload error: ${err}`);
       res.writeHead(500, { "Content-Type": "application/json" });
@@ -406,11 +412,16 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === "GET" && req.url === "/api/assets/list") {
-    log("assets", "list request");
+  if (req.method === "GET" && (req.url === "/api/assets/list" || req.url?.startsWith("/api/assets/list?"))) {
+    const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
+    const folder = parsedUrl.searchParams.get("folder") ?? undefined;
+    const targetDir = folder ? resolve(ASSETS_DIR, folder) : ASSETS_DIR;
+    const urlPrefix = folder ? `/assets/${folder}` : "/assets";
+
+    log("assets", `list request${folder ? ` (folder=${folder})` : ""}`);
     try {
-      mkdirSync(ASSETS_DIR, { recursive: true });
-      const files = readdirSync(ASSETS_DIR).filter((f) => !f.startsWith("."));
+      mkdirSync(targetDir, { recursive: true });
+      const files = readdirSync(targetDir).filter((f) => !f.startsWith("."));
 
       const MIME_MAP: Record<string, string> = {
         ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
@@ -419,11 +430,11 @@ const server = createServer(async (req, res) => {
       };
 
       const assets = files.map((f) => {
-        const stat = statSync(resolve(ASSETS_DIR, f));
+        const stat = statSync(resolve(targetDir, f));
         const ext = extname(f).toLowerCase();
         return {
           filename: f,
-          path: `/assets/${f}`,
+          path: `${urlPrefix}/${f}`,
           size: stat.size,
           mime: MIME_MAP[ext] ?? "application/octet-stream",
           modified: stat.mtimeMs,
@@ -442,10 +453,15 @@ const server = createServer(async (req, res) => {
   }
 
   if (req.method === "DELETE" && req.url?.startsWith("/api/assets/")) {
-    const filename = decodeURIComponent(req.url.slice("/api/assets/".length));
-    log("assets", `delete request: ${filename}`);
+    const rawPath = decodeURIComponent(req.url.slice("/api/assets/".length));
+    const parts = rawPath.split("/");
+    const folder = parts.length > 1 ? parts.slice(0, -1).join("/") : undefined;
+    const filename = parts[parts.length - 1];
+    const targetDir = folder ? resolve(ASSETS_DIR, folder) : ASSETS_DIR;
+
+    log("assets", `delete request: ${rawPath}`);
     try {
-      const filePath = resolve(ASSETS_DIR, filename);
+      const filePath = resolve(targetDir, filename);
       if (!filePath.startsWith(ASSETS_DIR)) {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Invalid filename" }));
@@ -457,7 +473,7 @@ const server = createServer(async (req, res) => {
         return;
       }
       unlinkSync(filePath);
-      log("assets", `deleted ${filename}`);
+      log("assets", `deleted ${rawPath}`);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ ok: true }));
     } catch (err) {

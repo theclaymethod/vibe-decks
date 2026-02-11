@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useGeneration } from "../hooks/use-generation";
+import { useAssets } from "../hooks/use-assets";
 import { AssistantContent } from "./assistant-content";
 
 type WizardStep =
@@ -40,7 +41,8 @@ export function DesignSystemWizard() {
   const generation = useGeneration();
   const [step, setStep] = useState<WizardStep>("references");
 
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const inspiration = useAssets("inspiration");
+
   const [urls, setUrls] = useState("");
   const [selectedPalette, setSelectedPalette] = useState<string | null>(null);
   const [customColors, setCustomColors] = useState("");
@@ -51,31 +53,18 @@ export function DesignSystemWizard() {
 
   const planSessionRef = useRef<string | null>(null);
 
-  const toBase64 = useCallback((file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }, []);
-
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    setImageFiles((prev) => [...prev, ...files]);
-  }, []);
-
-  const removeImage = useCallback((index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    for (const file of files) inspiration.upload(file);
+  }, [inspiration]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files).filter((f) =>
       f.type.startsWith("image/")
     );
-    setImageFiles((prev) => [...prev, ...files]);
-  }, []);
+    for (const file of files) inspiration.upload(file);
+  }, [inspiration]);
 
   const buildDescription = useCallback((): string => {
     const parts: string[] = [];
@@ -113,19 +102,19 @@ export function DesignSystemWizard() {
 
   const generatePlan = useCallback(async () => {
     setStep("plan");
-    const images = await Promise.all(imageFiles.map(toBase64));
     const parsedUrls = urls.split("\n").map((u) => u.trim()).filter(Boolean);
+    const paths = inspiration.assets.map((a) => a.path);
 
     await generation.createDesignSystem(
       {
         description: buildDescription(),
         urls: parsedUrls.length > 0 ? parsedUrls : undefined,
-        images: images.length > 0 ? images : undefined,
+        imagePaths: paths.length > 0 ? paths : undefined,
         planOnly: true,
       },
       (sid) => { planSessionRef.current = sid; }
     );
-  }, [imageFiles, urls, generation, toBase64, buildDescription]);
+  }, [inspiration.assets, urls, generation, buildDescription]);
 
   useEffect(() => {
     if (step === "plan" && generation.status === "complete") {
@@ -135,16 +124,16 @@ export function DesignSystemWizard() {
 
   const executePlan = useCallback(async () => {
     setStep("execute");
-    const images = await Promise.all(imageFiles.map(toBase64));
     const parsedUrls = urls.split("\n").map((u) => u.trim()).filter(Boolean);
+    const paths = inspiration.assets.map((a) => a.path);
 
     await generation.createDesignSystem({
       description: buildDescription(),
       urls: parsedUrls.length > 0 ? parsedUrls : undefined,
-      images: images.length > 0 ? images : undefined,
+      imagePaths: paths.length > 0 ? paths : undefined,
       planOnly: false,
     });
-  }, [imageFiles, urls, generation, toBase64, buildDescription]);
+  }, [inspiration.assets, urls, generation, buildDescription]);
 
   useEffect(() => {
     if (step === "execute" && generation.status === "complete") {
@@ -208,17 +197,17 @@ export function DesignSystemWizard() {
                   Browse Files
                 </label>
               </div>
-              {imageFiles.length > 0 && (
+              {inspiration.assets.length > 0 && (
                 <div className="flex flex-wrap gap-3 mt-4">
-                  {imageFiles.map((f, i) => (
-                    <div key={i} className="relative group">
+                  {inspiration.assets.map((asset) => (
+                    <div key={asset.filename} className="relative group">
                       <img
-                        src={URL.createObjectURL(f)}
-                        alt={f.name}
+                        src={`${asset.path}?t=${asset.modified}`}
+                        alt={asset.filename}
                         className="w-24 h-24 object-cover rounded border border-neutral-200"
                       />
                       <button
-                        onClick={() => removeImage(i)}
+                        onClick={() => inspiration.remove(asset.filename)}
                         className="absolute -top-2 -right-2 w-5 h-5 bg-neutral-900 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         x

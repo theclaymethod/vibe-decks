@@ -19,14 +19,15 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-export function useAssets() {
+export function useAssets(folder?: string) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/assets/list`);
+      const qs = folder ? `?folder=${encodeURIComponent(folder)}` : "";
+      const res = await fetch(`${API_BASE}/api/assets/list${qs}`);
       const data = await res.json();
       setAssets(data.assets ?? []);
     } catch {
@@ -34,7 +35,7 @@ export function useAssets() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [folder]);
 
   const upload = useCallback(
     async (file: File): Promise<Asset> => {
@@ -42,19 +43,20 @@ export function useAssets() {
       const res = await fetch(`${API_BASE}/api/assets/upload`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, data }),
+        body: JSON.stringify({ filename: file.name, data, folder }),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error ?? "Upload failed");
       await refresh();
       return { ...result, mime: file.type, modified: Date.now() };
     },
-    [refresh]
+    [folder, refresh]
   );
 
   const remove = useCallback(
     async (filename: string) => {
-      const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(filename)}`, {
+      const deletePath = folder ? `${folder}/${filename}` : filename;
+      const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(deletePath)}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -63,7 +65,7 @@ export function useAssets() {
       }
       await refresh();
     },
-    [refresh]
+    [folder, refresh]
   );
 
   useEffect(() => {
