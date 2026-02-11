@@ -3,10 +3,16 @@ import { cn } from "@/lib/utils";
 import { AssistantContent } from "./assistant-content";
 import type { ChatMessage, GrabbedContext } from "../types";
 
+interface PendingImage {
+  file: File;
+  preview: string;
+}
+
 interface ChatThreadProps {
   messages: ChatMessage[];
   isGenerating: boolean;
   onSend: (text: string) => void;
+  onSendWithImage?: (text: string, file: File) => void;
   onClear: () => void;
   grabbedContext?: GrabbedContext | null;
   onDismissContext?: () => void;
@@ -68,11 +74,13 @@ export function ChatThread({
   messages,
   isGenerating,
   onSend,
+  onSendWithImage,
   onClear,
   grabbedContext,
   onDismissContext,
 }: ChatThreadProps) {
   const [input, setInput] = useState("");
+  const [pendingImage, setPendingImage] = useState<PendingImage | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -95,12 +103,24 @@ export function ChatThread({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [grabbedContext, onDismissContext]);
 
+  const attachImage = useCallback((file: File) => {
+    setPendingImage({ file, preview: URL.createObjectURL(file) });
+  }, []);
+
   const submitInput = useCallback(() => {
     const text = input.trim();
     if (!text || isGenerating) return;
     setInput("");
-    onSend(text);
-  }, [input, isGenerating, onSend]);
+
+    if (pendingImage && onSendWithImage) {
+      const file = pendingImage.file;
+      URL.revokeObjectURL(pendingImage.preview);
+      setPendingImage(null);
+      onSendWithImage(text, file);
+    } else {
+      onSend(text);
+    }
+  }, [input, isGenerating, onSend, onSendWithImage, pendingImage]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -178,13 +198,54 @@ export function ChatThread({
         <GrabbedContextChip context={grabbedContext} onDismiss={onDismissContext} />
       )}
 
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      {pendingImage && (
+        <div className="mb-2 rounded-xl bg-emerald-50 border-2 border-emerald-300 overflow-hidden shadow-sm">
+          <div className="flex items-center justify-between px-4 py-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <img
+                src={pendingImage.preview}
+                alt=""
+                className="w-8 h-8 rounded object-cover shrink-0"
+              />
+              <span className="text-xs font-medium text-emerald-800 truncate">
+                {pendingImage.file.name}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                URL.revokeObjectURL(pendingImage.preview);
+                setPendingImage(null);
+              }}
+              className="shrink-0 ml-2 w-6 h-6 flex items-center justify-center rounded-md text-emerald-400 hover:text-emerald-700 hover:bg-emerald-200 transition-colors"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M2 2l8 8M10 2l-8 8" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex gap-2"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const file = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith("image/"));
+          if (file) attachImage(file);
+        }}
+      >
         <textarea
           ref={textareaRef}
           rows={1}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
+          onPaste={(e) => {
+            const file = Array.from(e.clipboardData.files).find((f) => f.type.startsWith("image/"));
+            if (file) attachImage(file);
+          }}
           placeholder={isGenerating ? "Generating..." : "Enter to send · Shift+Enter for newline"}
           disabled={isGenerating}
           className="flex-1 px-2 py-1.5 border border-neutral-200 rounded text-sm bg-white focus:border-neutral-400 outline-none disabled:opacity-50 resize-none"

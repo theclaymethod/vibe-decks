@@ -1,14 +1,15 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { spawn, type ChildProcess } from "node:child_process";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, readdirSync, statSync, unlinkSync, existsSync } from "node:fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "..");
 const PORT = 3333;
 const WIREFRAME_DIR = resolve(PROJECT_ROOT, ".builder-tmp");
 const WIREFRAME_PATH = resolve(WIREFRAME_DIR, "wireframe.png");
+const ASSETS_DIR = resolve(PROJECT_ROOT, "public/assets");
 
 function log(tag: string, ...args: unknown[]): void {
   console.log(`[${new Date().toISOString().slice(11, 19)}] [${tag}]`, ...args);
@@ -16,7 +17,7 @@ function log(tag: string, ...args: unknown[]): void {
 
 function setCors(res: ServerResponse): void {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
@@ -359,6 +360,110 @@ const server = createServer(async (req, res) => {
       res.end(
         JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" })
       );
+    }
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/assets/upload") {
+    log("assets", "upload request");
+    try {
+      const body = JSON.parse(await readBody(req));
+      const { filename: rawName, data } = body as { filename: string; data: string };
+
+      if (!rawName || !data) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "filename and data are required" }));
+        return;
+      }
+
+      const sanitized = rawName
+        .replace(/\s+/g, "-")
+        .replace(/[^a-zA-Z0-9\-_.]/g, "")
+        .toLowerCase();
+
+      const ext = extname(sanitized);
+      const base = sanitized.slice(0, sanitized.length - ext.length) || "file";
+      mkdirSync(ASSETS_DIR, { recursive: true });
+
+      let finalName = sanitized;
+      if (existsSync(resolve(ASSETS_DIR, finalName))) {
+        finalName = `${base}-${Date.now()}${ext}`;
+      }
+
+      const base64 = data.replace(/^data:[^;]+;base64,/, "");
+      const buffer = Buffer.from(base64, "base64");
+      const filePath = resolve(ASSETS_DIR, finalName);
+      writeFileSync(filePath, buffer);
+
+      log("assets", `uploaded ${finalName} (${buffer.length} bytes)`);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ path: `/assets/${finalName}`, filename: finalName, size: buffer.length }));
+    } catch (err) {
+      log("assets", `upload error: ${err}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }));
+    }
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/api/assets/list") {
+    log("assets", "list request");
+    try {
+      mkdirSync(ASSETS_DIR, { recursive: true });
+      const files = readdirSync(ASSETS_DIR).filter((f) => !f.startsWith("."));
+
+      const MIME_MAP: Record<string, string> = {
+        ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+        ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml",
+        ".pdf": "application/pdf", ".mp4": "video/mp4",
+      };
+
+      const assets = files.map((f) => {
+        const stat = statSync(resolve(ASSETS_DIR, f));
+        const ext = extname(f).toLowerCase();
+        return {
+          filename: f,
+          path: `/assets/${f}`,
+          size: stat.size,
+          mime: MIME_MAP[ext] ?? "application/octet-stream",
+          modified: stat.mtimeMs,
+        };
+      });
+
+      assets.sort((a, b) => b.modified - a.modified);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ assets }));
+    } catch (err) {
+      log("assets", `list error: ${err}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }));
+    }
+    return;
+  }
+
+  if (req.method === "DELETE" && req.url?.startsWith("/api/assets/")) {
+    const filename = decodeURIComponent(req.url.slice("/api/assets/".length));
+    log("assets", `delete request: ${filename}`);
+    try {
+      const filePath = resolve(ASSETS_DIR, filename);
+      if (!filePath.startsWith(ASSETS_DIR)) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid filename" }));
+        return;
+      }
+      if (!existsSync(filePath)) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "File not found" }));
+        return;
+      }
+      unlinkSync(filePath);
+      log("assets", `deleted ${filename}`);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      log("assets", `delete error: ${err}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }));
     }
     return;
   }

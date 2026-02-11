@@ -1,14 +1,17 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import type { GenerationStatus, ChatMessage, GrabbedContext } from "../types";
 import { SlidePicker } from "./slide-picker";
 import { ChatThread } from "./chat-thread";
+import { AssetBrowser } from "./asset-browser";
 
 interface EditSidebarProps {
   selectedFileKey: string;
   messages: ChatMessage[];
   status: GenerationStatus;
   onSendMessage: (text: string) => void;
+  onSendWithImage?: (text: string, file: File) => void;
   onClearHistory: () => void;
   grabbedContext?: GrabbedContext | null;
   onDismissContext?: () => void;
@@ -29,6 +32,7 @@ export function EditSidebar({
   messages,
   status,
   onSendMessage,
+  onSendWithImage,
   onClearHistory,
   grabbedContext,
   onDismissContext,
@@ -36,6 +40,8 @@ export function EditSidebar({
   isResizing,
   onResizeMouseDown,
 }: EditSidebarProps) {
+  const [assetBrowserOpen, setAssetBrowserOpen] = useState(false);
+
   return (
     <div
       className="border-l border-neutral-200 bg-white flex flex-col p-4 relative"
@@ -75,6 +81,7 @@ export function EditSidebar({
         messages={messages}
         isGenerating={status === "generating"}
         onSend={onSendMessage}
+        onSendWithImage={onSendWithImage}
         onClear={onClearHistory}
         grabbedContext={grabbedContext}
         onDismissContext={onDismissContext}
@@ -93,7 +100,15 @@ export function EditSidebar({
         <span className="text-xs text-neutral-500">
           {STATUS_LABELS[status]}
         </span>
+        <button
+          onClick={() => setAssetBrowserOpen(true)}
+          className="ml-auto text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+        >
+          Assets
+        </button>
       </div>
+
+      <AssetBrowser open={assetBrowserOpen} onClose={() => setAssetBrowserOpen(false)} />
     </div>
   );
 }

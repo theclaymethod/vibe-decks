@@ -9,6 +9,7 @@ import { useGeneration } from "../hooks/use-generation";
 import { useEditSession } from "../hooks/use-edit-session";
 import { useGrab } from "../hooks/use-grab";
 import { useResizable } from "../hooks/use-resizable";
+import { useAssets } from "../hooks/use-assets";
 import { captureStageAsDataUrl } from "../canvas-capture";
 import { Canvas } from "./canvas";
 import { BoxProperties } from "./box-properties";
@@ -204,6 +205,8 @@ function EditView({ fileKey }: { fileKey: string }) {
     enabled: true,
   });
 
+  const { upload: uploadAsset } = useAssets();
+
   const generation = useGeneration();
   const { edit: editSlideViaChat } = generation;
 
@@ -268,6 +271,19 @@ function EditView({ fileKey }: { fileKey: string }) {
     [editSlide, addUserMessage, addAssistantMessage, setSessionId, editSlideViaChat, grabbedContext, clearContext]
   );
 
+  const handleSendWithImage = useCallback(
+    async (text: string, file: File) => {
+      try {
+        const asset = await uploadAsset(file);
+        const prompt = `[Uploaded Image: ${asset.path}]\n\n${text}`;
+        handleSendMessage(prompt);
+      } catch {
+        handleSendMessage(text);
+      }
+    },
+    [uploadAsset, handleSendMessage]
+  );
+
   return (
     <div className="h-screen flex bg-neutral-50">
       <SlidePreview
@@ -281,6 +297,7 @@ function EditView({ fileKey }: { fileKey: string }) {
         messages={editMessages}
         status={generation.status}
         onSendMessage={handleSendMessage}
+        onSendWithImage={handleSendWithImage}
         onClearHistory={clearHistory}
         grabbedContext={grabbedContext}
         onDismissContext={clearContext}

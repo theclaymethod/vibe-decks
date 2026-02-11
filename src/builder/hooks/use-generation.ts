@@ -84,6 +84,7 @@ async function readSSEStream(
 ): Promise<void> {
   const decoder = new TextDecoder();
   let buffer = "";
+  const seenToolUseIds = new Set<string>();
 
   while (true) {
     const { done, value } = await reader.read();
@@ -120,6 +121,8 @@ async function readSSEStream(
             if (block.type === "text") {
               callbacks.onText(block.text);
             } else if (block.type === "tool_use") {
+              if (block.id && seenToolUseIds.has(block.id)) continue;
+              if (block.id) seenToolUseIds.add(block.id);
               callbacks.onText("\n" + formatToolUse(block.name, block.input) + "\n");
             }
           }
