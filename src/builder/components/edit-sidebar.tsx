@@ -11,6 +11,9 @@ interface EditSidebarProps {
   onClearHistory: () => void;
   grabbedContext?: GrabbedContext | null;
   onDismissContext?: () => void;
+  width: number;
+  isResizing: boolean;
+  onResizeMouseDown: (e: React.MouseEvent) => void;
 }
 
 const STATUS_LABELS: Record<GenerationStatus, string> = {
@@ -28,9 +31,22 @@ export function EditSidebar({
   onClearHistory,
   grabbedContext,
   onDismissContext,
+  width,
+  isResizing,
+  onResizeMouseDown,
 }: EditSidebarProps) {
   return (
-    <div className="w-80 border-l border-neutral-200 bg-white flex flex-col p-4">
+    <div
+      className="border-l border-neutral-200 bg-white flex flex-col p-4 relative"
+      style={{ width }}
+    >
+      <div
+        onMouseDown={onResizeMouseDown}
+        className={cn(
+          "absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-10 group",
+          isResizing ? "bg-indigo-400" : "hover:bg-neutral-300"
+        )}
+      />
       <SlidePicker selectedFileKey={selectedFileKey} />
 
       <hr className="border-neutral-100 my-4" />

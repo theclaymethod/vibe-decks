@@ -1,260 +1,67 @@
-import { useRef, useEffect, useState, type ReactNode } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import type { ChatMessage } from "../types";
+import { AssistantContent } from "./assistant-content";
+import type { ChatMessage, GrabbedContext } from "../types";
 
 interface ChatThreadProps {
   messages: ChatMessage[];
   isGenerating: boolean;
   onSend: (text: string) => void;
   onClear: () => void;
+  grabbedContext?: GrabbedContext | null;
+  onDismissContext?: () => void;
 }
 
-type Segment =
-  | { kind: "text"; text: string }
-  | { kind: "tool"; tool: string; target: string }
-  | { kind: "result"; text: string }
-  | { kind: "question"; text: string }
-  | { kind: "option"; label: string; description: string }
-  | { kind: "plan"; text: string };
-
-const TOOL_RE = /^\[(Read|Edit|Write|Bash|Glob|Grep|Task|Skill)\]\s*(.*)$/;
-const QUESTION_RE = /^\[Question\]\s*(.*)$/;
-const OPTION_RE = /^\[Option\]\s*(.*)$/;
-const PLAN_RE = /^\[Plan\]\s*(.*)$/;
-
-function parseSegments(raw: string): Segment[] {
-  const lines = raw.split("\n");
-  const segments: Segment[] = [];
-  let textBuf = "";
-  let lastTool: Segment | null = null;
-
-  const flushText = () => {
-    const trimmed = textBuf.trim();
-    if (trimmed) segments.push({ kind: "text", text: trimmed });
-    textBuf = "";
-  };
-
-  for (const line of lines) {
-    const toolMatch = line.match(TOOL_RE);
-    const questionMatch = line.match(QUESTION_RE);
-    const optionMatch = line.match(OPTION_RE);
-    const planMatch = line.match(PLAN_RE);
-
-    if (questionMatch) {
-      flushText();
-      if (lastTool) { segments.push(lastTool); lastTool = null; }
-      segments.push({ kind: "question", text: questionMatch[1] });
-    } else if (optionMatch) {
-      flushText();
-      if (lastTool) { segments.push(lastTool); lastTool = null; }
-      const raw = optionMatch[1];
-      const dashIdx = raw.indexOf(" - ");
-      const label = dashIdx >= 0 ? raw.slice(0, dashIdx) : raw;
-      const description = dashIdx >= 0 ? raw.slice(dashIdx + 3) : "";
-      segments.push({ kind: "option", label, description });
-    } else if (planMatch) {
-      flushText();
-      if (lastTool) { segments.push(lastTool); lastTool = null; }
-      segments.push({ kind: "plan", text: planMatch[1] });
-    } else if (toolMatch) {
-      flushText();
-      if (lastTool) segments.push(lastTool);
-      lastTool = { kind: "tool", tool: toolMatch[1], target: toolMatch[2] };
-    } else if (lastTool && line.trim() && !line.match(TOOL_RE)) {
-      segments.push(lastTool);
-      lastTool = null;
-
-      if (
-        line.trim().startsWith("The file") ||
-        line.trim().startsWith("Successfully") ||
-        line.trim().match(/^\d+ files? /)
-      ) {
-        segments.push({ kind: "result", text: line.trim() });
-      } else {
-        textBuf += line + "\n";
-      }
-    } else {
-      textBuf += line + "\n";
-    }
-  }
-
-  if (lastTool) segments.push(lastTool);
-  flushText();
-  return segments;
-}
-
-const TOOL_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  Read: { label: "READ", color: "text-blue-600", bg: "bg-blue-50 border-blue-200" },
-  Edit: { label: "EDIT", color: "text-amber-600", bg: "bg-amber-50 border-amber-200" },
-  Write: { label: "WRITE", color: "text-green-600", bg: "bg-green-50 border-green-200" },
-  Bash: { label: "RUN", color: "text-violet-600", bg: "bg-violet-50 border-violet-200" },
-  Glob: { label: "FIND", color: "text-cyan-600", bg: "bg-cyan-50 border-cyan-200" },
-  Grep: { label: "SEARCH", color: "text-cyan-600", bg: "bg-cyan-50 border-cyan-200" },
-  Task: { label: "TASK", color: "text-orange-600", bg: "bg-orange-50 border-orange-200" },
-  Skill: { label: "SKILL", color: "text-pink-600", bg: "bg-pink-50 border-pink-200" },
-};
-
-function ToolBlock({ tool, target }: { tool: string; target: string }) {
-  const style = TOOL_STYLES[tool] ?? {
-    label: tool.toUpperCase(),
-    color: "text-neutral-600",
-    bg: "bg-neutral-50 border-neutral-200",
-  };
-
-  return (
-    <div className={cn("flex items-center gap-1.5 rounded border px-2 py-1 my-1", style.bg)}>
-      <span
-        className={cn(
-          "text-[9px] font-bold uppercase tracking-wider shrink-0",
-          style.color
-        )}
-      >
-        {style.label}
-      </span>
-      <span className="text-[10px] font-mono text-neutral-600 truncate">
-        {target}
-      </span>
-    </div>
-  );
-}
-
-function ResultLine({ text }: { text: string }) {
-  return (
-    <div className="text-[10px] text-green-600 font-mono pl-2 border-l-2 border-green-200 my-1">
-      {text}
-    </div>
-  );
-}
-
-function QuestionBlock({ text }: { text: string }) {
-  return (
-    <div className="my-2 px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-200">
-      <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-500 block mb-1">
-        Question
-      </span>
-      <p className="text-xs text-indigo-900 leading-relaxed">{text}</p>
-    </div>
-  );
-}
-
-function OptionButton({
-  label,
-  description,
-  onSelect,
+function GrabbedContextChip({
+  context,
+  onDismiss,
 }: {
-  label: string;
-  description: string;
-  onSelect: (label: string) => void;
+  context: GrabbedContext;
+  onDismiss: () => void;
 }) {
+  const location = context.lineNumber
+    ? `${context.filePath}:${context.lineNumber}`
+    : context.filePath;
+
   return (
-    <button
-      onClick={() => onSelect(label)}
-      className="w-full text-left my-0.5 px-3 py-1.5 rounded border border-indigo-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 transition-colors group"
-    >
-      <span className="text-xs font-medium text-indigo-700 group-hover:text-indigo-900">
-        {label}
-      </span>
-      {description && (
-        <span className="text-[10px] text-neutral-500 block mt-0.5">{description}</span>
-      )}
-    </button>
-  );
-}
-
-function PlanIndicator({ text }: { text: string }) {
-  return (
-    <div className="flex items-center gap-1.5 my-2 px-3 py-2 rounded-lg bg-violet-50 border border-violet-200">
-      <span className="text-[9px] font-bold uppercase tracking-wider text-violet-500 shrink-0">
-        Plan Mode
-      </span>
-      <span className="text-[10px] text-violet-700">{text}</span>
-    </div>
-  );
-}
-
-function renderInlineMarkdown(text: string): ReactNode[] {
-  const parts: ReactNode[] = [];
-  const re = /(\*\*(.+?)\*\*)|(`(.+?)`)/g;
-  let last = 0;
-  let match: RegExpExecArray | null;
-  let key = 0;
-
-  while ((match = re.exec(text)) !== null) {
-    if (match.index > last) {
-      parts.push(text.slice(last, match.index));
-    }
-    if (match[2]) {
-      parts.push(
-        <strong key={key++} className="font-semibold text-neutral-900">
-          {match[2]}
-        </strong>
-      );
-    } else if (match[4]) {
-      parts.push(
-        <code
-          key={key++}
-          className="px-1 py-0.5 rounded bg-neutral-200/60 text-neutral-800 font-mono text-[10px]"
-        >
-          {match[4]}
-        </code>
-      );
-    }
-    last = match.index + match[0].length;
-  }
-
-  if (last < text.length) {
-    parts.push(text.slice(last));
-  }
-  return parts;
-}
-
-function AssistantContent({
-  text,
-  isStreaming,
-  onSelectOption,
-}: {
-  text: string;
-  isStreaming: boolean;
-  onSelectOption: (label: string) => void;
-}) {
-  const segments = parseSegments(text);
-
-  const nodes: ReactNode[] = segments.map((seg, i) => {
-    switch (seg.kind) {
-      case "tool":
-        return <ToolBlock key={i} tool={seg.tool} target={seg.target} />;
-      case "result":
-        return <ResultLine key={i} text={seg.text} />;
-      case "question":
-        return <QuestionBlock key={i} text={seg.text} />;
-      case "option":
-        return (
-          <OptionButton
-            key={i}
-            label={seg.label}
-            description={seg.description}
-            onSelect={onSelectOption}
-          />
-        );
-      case "plan":
-        return <PlanIndicator key={i} text={seg.text} />;
-      case "text":
-        return (
-          <span key={i} className="whitespace-pre-wrap">
-            {renderInlineMarkdown(seg.text)}
+    <div className="mb-3 rounded-xl bg-blue-50 border-2 border-blue-300 overflow-hidden shadow-sm">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-blue-100">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-500 shrink-0">
+            Selected
           </span>
-        );
-    }
-  });
-
-  return (
-    <>
-      {nodes}
-      {isStreaming && (
-        <span className="inline-block w-1 h-3 ml-0.5 bg-neutral-400 animate-pulse align-text-bottom" />
+          <span className="text-sm font-semibold text-blue-900 truncate">
+            {context.componentName}
+          </span>
+        </div>
+        <button
+          onClick={onDismiss}
+          className="shrink-0 ml-2 w-6 h-6 flex items-center justify-center rounded-md text-blue-400 hover:text-blue-700 hover:bg-blue-200 transition-colors"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M2 2l8 8M10 2l-8 8" />
+          </svg>
+        </button>
+      </div>
+      {location && (
+        <div className="px-4 py-1.5 text-xs font-mono text-blue-600 truncate">
+          {location}
+        </div>
       )}
-    </>
+      {context.htmlFrame && (
+        <pre className="px-4 py-2 text-xs font-mono text-blue-700/80 leading-relaxed whitespace-pre-wrap overflow-hidden max-h-24 border-t border-blue-200">
+          {context.htmlFrame}
+        </pre>
+      )}
+    </div>
   );
+}
+
+function isLastAssistant(messages: ChatMessage[], idx: number, isGenerating: boolean): boolean {
+  for (let j = idx + 1; j < messages.length; j++) {
+    if (messages[j].role === "user") return false;
+  }
+  return !isGenerating;
 }
 
 export function ChatThread({
@@ -262,9 +69,12 @@ export function ChatThread({
   isGenerating,
   onSend,
   onClear,
+  grabbedContext,
+  onDismissContext,
 }: ChatThreadProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -272,12 +82,36 @@ export function ChatThread({
     }
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!grabbedContext || !onDismissContext) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onDismissContext();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [grabbedContext, onDismissContext]);
+
+  const submitInput = useCallback(() => {
     const text = input.trim();
     if (!text || isGenerating) return;
     setInput("");
     onSend(text);
+  }, [input, isGenerating, onSend]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitInput();
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitInput();
   };
 
   return (
@@ -301,11 +135,20 @@ export function ChatThread({
         className="flex-1 overflow-y-auto space-y-3 mb-3 min-h-0"
       >
         {messages.length === 0 && (
-          <p className="text-xs text-neutral-400 px-1">
-            Describe changes to this slide...
-          </p>
+          <div className="flex flex-col items-center justify-center h-full text-center px-4 py-8">
+            <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-neutral-600">Edit this slide</p>
+            <p className="text-xs text-neutral-400 mt-1 leading-relaxed max-w-[200px]">
+              Describe what you'd like to change, or grab an element from the preview.
+            </p>
+          </div>
         )}
-        {messages.map((msg) =>
+        {messages.map((msg, idx) =>
           msg.role === "user" ? (
             <div
               key={msg.id}
@@ -321,6 +164,7 @@ export function ChatThread({
               <AssistantContent
                 text={msg.text}
                 isStreaming={msg.status === "streaming"}
+                isActionable={isLastAssistant(messages, idx, isGenerating)}
                 onSelectOption={(label) => {
                   if (!isGenerating) onSend(label);
                 }}
@@ -330,20 +174,26 @@ export function ChatThread({
         )}
       </div>
 
+      {grabbedContext && onDismissContext && (
+        <GrabbedContextChip context={grabbedContext} onDismiss={onDismissContext} />
+      )}
+
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
+          rows={1}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={isGenerating ? "Generating..." : "Edit this slide..."}
+          onKeyDown={handleKeyDown}
+          placeholder={isGenerating ? "Generating..." : "Enter to send · Shift+Enter for newline"}
           disabled={isGenerating}
-          className="flex-1 px-2 py-1.5 border border-neutral-200 rounded text-sm bg-white focus:border-neutral-400 outline-none disabled:opacity-50"
+          className="flex-1 px-2 py-1.5 border border-neutral-200 rounded text-sm bg-white focus:border-neutral-400 outline-none disabled:opacity-50 resize-none"
         />
         <button
           type="submit"
           disabled={!input.trim() || isGenerating}
           className={cn(
-            "px-3 py-1.5 rounded text-xs font-medium transition-colors",
+            "px-3 py-1.5 rounded text-xs font-medium transition-colors self-end",
             input.trim() && !isGenerating
               ? "bg-neutral-900 text-white hover:bg-neutral-800"
               : "bg-neutral-100 text-neutral-400 cursor-not-allowed"

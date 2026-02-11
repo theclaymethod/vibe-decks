@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
 import type Konva from "konva";
 import { SLIDE_CONFIG, TOTAL_SLIDES } from "@/deck/config";
 import { useCanvasBoxes } from "../hooks/use-canvas-boxes";
@@ -7,6 +8,7 @@ import { usePromptGenerator } from "../hooks/use-prompt-generator";
 import { useGeneration } from "../hooks/use-generation";
 import { useEditSession } from "../hooks/use-edit-session";
 import { useGrab } from "../hooks/use-grab";
+import { useResizable } from "../hooks/use-resizable";
 import { captureStageAsDataUrl } from "../canvas-capture";
 import { Canvas } from "./canvas";
 import { BoxProperties } from "./box-properties";
@@ -50,6 +52,12 @@ export function BuilderLayout({ fileKey }: BuilderLayoutProps) {
 function CreateView() {
   const navigate = useNavigate();
   const stageRef = useRef<Konva.Stage>(null);
+  const sidebar = useResizable({
+    defaultWidth: 320,
+    minWidth: 280,
+    maxWidthPercent: 0.5,
+    storageKey: "builder-create-sidebar-width",
+  });
 
   const {
     boxes,
@@ -128,7 +136,17 @@ function CreateView() {
         )}
       </div>
 
-      <div className="w-80 border-l border-neutral-200 bg-white overflow-y-auto p-4 space-y-6">
+      <div
+        className="border-l border-neutral-200 bg-white overflow-y-auto p-4 space-y-6 relative"
+        style={{ width: sidebar.width }}
+      >
+        <div
+          onMouseDown={sidebar.handleMouseDown}
+          className={cn(
+            "absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-10",
+            sidebar.isResizing ? "bg-indigo-400" : "hover:bg-neutral-300"
+          )}
+        />
         {selectedBox && (
           <>
             <BoxProperties
@@ -172,6 +190,13 @@ function CreateView() {
 
 function EditView({ fileKey }: { fileKey: string }) {
   const editSlide = useMemo(() => resolveEditInfo(fileKey), [fileKey]);
+
+  const sidebar = useResizable({
+    defaultWidth: 320,
+    minWidth: 280,
+    maxWidthPercent: 0.5,
+    storageKey: "builder-edit-sidebar-width",
+  });
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const { grabbedContext, clearContext } = useGrab({
@@ -255,6 +280,9 @@ function EditView({ fileKey }: { fileKey: string }) {
         onClearHistory={clearHistory}
         grabbedContext={grabbedContext}
         onDismissContext={clearContext}
+        width={sidebar.width}
+        isResizing={sidebar.isResizing}
+        onResizeMouseDown={sidebar.handleMouseDown}
       />
     </div>
   );
