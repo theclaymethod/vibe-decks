@@ -88,7 +88,7 @@ export function TeamTemplate({
               variants={itemVariants}
             >
               <div
-                className="w-24 h-24 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 overflow-hidden"
+                className="w-40 h-40 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 overflow-hidden"
                 style={{
                   backgroundColor: person.imageUrl
                     ? "transparent"
@@ -105,7 +105,7 @@ export function TeamTemplate({
                   />
                 ) : (
                   <span
-                    className="text-2xl"
+                    className="text-4xl"
                     style={{
                       fontFamily: "var(--font-body)",
                       color: isLight ? "#fff" : "var(--color-text-inverse)",
