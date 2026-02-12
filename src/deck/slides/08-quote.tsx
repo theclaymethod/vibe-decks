@@ -1,5 +1,4 @@
-import { motion } from "motion/react";
-import { SlideContainer } from "@/design-system";
+import { SlideContainer, Quote, AnimatedEntry } from "@/design-system";
 
 function QuotePanel({
   quote,
@@ -13,13 +12,7 @@ function QuotePanel({
   delay?: number;
 }) {
   return (
-    <motion.div
-      className="group relative flex-1 overflow-hidden cursor-pointer"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease: "easeOut" }}
-      whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
-    >
+    <AnimatedEntry variant="slideUp" delay={delay} className="group relative flex-1 overflow-hidden cursor-pointer">
       <div
         className="absolute inset-0 bg-cover bg-center transition-all duration-700 grayscale group-hover:grayscale-0"
         style={{ backgroundImage: `url('${imageUrl}')` }}
@@ -27,26 +20,11 @@ function QuotePanel({
       <div className="absolute inset-0 bg-black/60 transition-colors duration-500 group-hover:bg-black/40" />
 
       <div className="relative h-full flex flex-col justify-center p-12">
-        <p
-          className="text-[42px] leading-[1.1] uppercase mb-8"
-          style={{
-            fontFamily: "var(--font-heading)",
-            color: "#fff",
-          }}
-        >
-          "{quote}"
-        </p>
-        <span
-          className="text-[18px] tracking-[0.15em] uppercase font-medium"
-          style={{
-            fontFamily: "var(--font-body)",
-            color: "rgba(255,255,255,0.7)",
-          }}
-        >
-          — {attribution}
-        </span>
+        <Quote attribution={attribution}>
+          {quote}
+        </Quote>
       </div>
-    </motion.div>
+    </AnimatedEntry>
   );
 }
 
