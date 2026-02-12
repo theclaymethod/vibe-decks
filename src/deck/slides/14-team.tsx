@@ -9,10 +9,10 @@ import {
 } from "@/design-system";
 
 const members = [
-  { name: "Alex Chen", role: "Product Lead", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face" },
-  { name: "Sarah Kim", role: "Engineering", imageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=face" },
-  { name: "Mike Davis", role: "Design", imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face" },
-  { name: "Emma Wilson", role: "Data Science", imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=face" },
+  { name: "Alex Chen", role: "Product Lead", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop&crop=face" },
+  { name: "Sarah Kim", role: "Engineering", imageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&h=500&fit=crop&crop=face" },
+  { name: "Mike Davis", role: "Design", imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&h=500&fit=crop&crop=face" },
+  { name: "Emma Wilson", role: "Data Science", imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=500&h=500&fit=crop&crop=face" },
 ];
 
 const itemVariants = {
@@ -32,7 +32,7 @@ export function Slide14Team() {
           <Eyebrow>The Team</Eyebrow>
           <SectionHeader
             className="mt-2"
-            style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)" }}
+            style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)" }}
           >
             Key Stakeholders
           </SectionHeader>
@@ -46,7 +46,7 @@ export function Slide14Team() {
                 className="flex flex-col items-center text-center group cursor-pointer"
                 variants={itemVariants}
               >
-                <div className="w-40 h-40 rounded-full mb-4 overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                <div className="w-64 h-64 rounded-full mb-6 overflow-hidden transition-transform duration-300 group-hover:scale-105">
                   <img
                     src={person.imageUrl}
                     alt={person.name}
@@ -55,7 +55,7 @@ export function Slide14Team() {
                 </div>
 
                 <h3
-                  className="text-[26px] transition-colors duration-300 group-hover:[color:var(--color-primary)]"
+                  className="text-[36px] transition-colors duration-300 group-hover:[color:var(--color-primary)]"
                   style={{
                     fontFamily: "var(--font-heading)",
                     color: "var(--color-text-primary)",
@@ -64,7 +64,7 @@ export function Slide14Team() {
                   {person.name}
                 </h3>
 
-                <MonoText className="text-[14px] mt-1">
+                <MonoText className="text-[20px] mt-2">
                   {person.role}
                 </MonoText>
               </motion.div>
