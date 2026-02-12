@@ -17,59 +17,73 @@ const logos = [
 ];
 
 const itemVariants = {
-  hidden: { opacity: 0, scale: 0.9 },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
-    scale: 1,
-    transition: { duration: 0.3, ease: "easeOut" as const },
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
   },
 };
 
 export function Slide15Partners() {
   return (
-    <SlideContainer mode="white">
+    <SlideContainer mode="dark">
       <div className="h-full flex flex-col">
-        <div className="text-center mb-8">
+        <div className="mb-10">
           <Eyebrow
             className="text-[20px]"
-            style={{ color: "var(--color-primary)" }}
+            style={{ color: "var(--color-yellow)" }}
           >
             Technology Stack
           </Eyebrow>
           <SectionHeader
             className="mt-2"
-            style={{ fontSize: "clamp(3rem, 5vw, 4rem)" }}
+            style={{ fontSize: "clamp(3rem, 5vw, 4.5rem)" }}
           >
             Built With
           </SectionHeader>
         </div>
 
-        <StaggerContainer stagger={0.08} delay={0} className="flex-1 grid grid-cols-3 grid-rows-2 gap-4 items-center justify-items-center">
+        <StaggerContainer
+          stagger={0.1}
+          delay={0.15}
+          className="flex-1 grid grid-cols-3 grid-rows-2 gap-6"
+        >
           {logos.map((logo, i) => (
-            <motion.div key={i} variants={itemVariants}>
+            <motion.div
+              key={i}
+              variants={itemVariants}
+              className="flex flex-col items-center justify-center"
+              style={{
+                backgroundColor: "var(--color-bg-secondary)",
+                border: "1px solid var(--color-border-light)",
+              }}
+              whileHover={{
+                y: -8,
+                boxShadow: "0 8px 30px rgba(252, 217, 75, 0.15)",
+                borderColor: "var(--color-yellow)",
+                transition: { duration: 0.2 },
+              }}
+            >
               <div
-                className="w-40 h-24 flex flex-col items-center justify-center transition-all duration-300 grayscale hover:grayscale-0 hover:scale-105 hover:shadow-md hover:-translate-y-1 cursor-pointer"
+                className="w-12 h-1 mb-5"
+                style={{ backgroundColor: "var(--color-yellow)" }}
+              />
+              <span
+                className="text-[32px] uppercase tracking-[-0.01em]"
                 style={{
-                  backgroundColor: "#fff",
-                  border: "1px solid rgba(0,0,0,0.1)",
+                  fontFamily: "var(--font-heading)",
+                  color: "var(--color-text-primary)",
                 }}
               >
-                <span
-                  className="text-lg font-medium"
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  {logo.name}
-                </span>
-                <MonoText
-                  className="text-[16px] mt-1"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  {logo.label}
-                </MonoText>
-              </div>
+                {logo.name}
+              </span>
+              <MonoText
+                className="text-[14px] mt-2 tracking-[0.15em] uppercase"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                {logo.label}
+              </MonoText>
             </motion.div>
           ))}
         </StaggerContainer>
