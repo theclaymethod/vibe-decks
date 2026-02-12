@@ -30,7 +30,7 @@ const ShieldIcon = () => (
 
 export function Slide04Features() {
   return (
-    <SlideContainer mode="yellow" className="flex flex-col">
+    <SlideContainer mode="light" className="flex flex-col">
       <StaggerContainer stagger={0.12} delay={0} className="mb-12">
         <AnimatedEntry variant="slideUp" className="mb-4">
           <Eyebrow>Capabilities</Eyebrow>
