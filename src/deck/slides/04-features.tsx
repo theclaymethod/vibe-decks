@@ -1,4 +1,13 @@
-import { FeatureGridTemplate } from "@/templates";
+import {
+  SlideContainer,
+  Eyebrow,
+  SectionHeader,
+  Divider,
+  GridSection,
+  FeatureCard,
+  AnimatedEntry,
+  StaggerContainer,
+} from "@/design-system";
 
 const CheckIcon = () => (
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -21,28 +30,44 @@ const ShieldIcon = () => (
 
 export function Slide04Features() {
   return (
-    <FeatureGridTemplate
-      eyebrow="Capabilities"
-      title="Key Features"
-      features={[
-        {
-          icon: <CheckIcon />,
-          title: "Easy Integration",
-          description: "Connect with your existing tools in minutes, not hours",
-        },
-        {
-          icon: <ChartIcon />,
-          title: "Real-time Analytics",
-          description: "Track performance with live dashboards and custom reports",
-        },
-        {
-          icon: <ShieldIcon />,
-          title: "Enterprise Security",
-          description: "Bank-level encryption and compliance certifications",
-        },
-      ]}
-      columns={3}
-      variant="cream"
-    />
+    <SlideContainer mode="yellow" className="flex flex-col">
+      <StaggerContainer stagger={0.12} delay={0} className="mb-12">
+        <AnimatedEntry variant="slideUp" className="mb-4">
+          <Eyebrow>Capabilities</Eyebrow>
+        </AnimatedEntry>
+        <AnimatedEntry variant="slideUp" className="mb-8">
+          <SectionHeader>Key Features</SectionHeader>
+        </AnimatedEntry>
+        <AnimatedEntry variant="slideUp">
+          <Divider />
+        </AnimatedEntry>
+      </StaggerContainer>
+
+      <StaggerContainer stagger={0.15} delay={0.3} className="flex-1 flex items-center">
+        <GridSection columns={3} gap="lg" className="w-full">
+          <AnimatedEntry variant="slideUp">
+            <FeatureCard
+              icon={<CheckIcon />}
+              title="Easy Integration"
+              description="Connect with your existing tools in minutes, not hours"
+            />
+          </AnimatedEntry>
+          <AnimatedEntry variant="slideUp">
+            <FeatureCard
+              icon={<ChartIcon />}
+              title="Real-time Analytics"
+              description="Track performance with live dashboards and custom reports"
+            />
+          </AnimatedEntry>
+          <AnimatedEntry variant="slideUp">
+            <FeatureCard
+              icon={<ShieldIcon />}
+              title="Enterprise Security"
+              description="Bank-level encryption and compliance certifications"
+            />
+          </AnimatedEntry>
+        </GridSection>
+      </StaggerContainer>
+    </SlideContainer>
   );
 }
