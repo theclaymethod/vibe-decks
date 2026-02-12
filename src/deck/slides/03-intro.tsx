@@ -48,7 +48,7 @@ export function Slide03Intro() {
           </StaggerContainer>
         }
         right={
-          <AnimatedEntry variant="fadeIn" delay={0.3}>
+          <AnimatedEntry variant="fade" delay={0.3}>
             <div className="h-full w-full overflow-hidden">
               <img
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=800&fit=crop"
