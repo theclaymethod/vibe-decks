@@ -75,37 +75,28 @@ export function parseSegments(raw: string): Segment[] {
   return segments;
 }
 
-const TOOL_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  Read: { label: "READ", color: "text-blue-600", bg: "bg-blue-50 border-blue-200" },
-  Edit: { label: "EDIT", color: "text-amber-600", bg: "bg-amber-50 border-amber-200" },
-  Write: { label: "WRITE", color: "text-green-600", bg: "bg-green-50 border-green-200" },
-  Bash: { label: "RUN", color: "text-violet-600", bg: "bg-violet-50 border-violet-200" },
-  Glob: { label: "FIND", color: "text-cyan-600", bg: "bg-cyan-50 border-cyan-200" },
-  Grep: { label: "SEARCH", color: "text-cyan-600", bg: "bg-cyan-50 border-cyan-200" },
-  Task: { label: "TASK", color: "text-orange-600", bg: "bg-orange-50 border-orange-200" },
-  Skill: { label: "SKILL", color: "text-pink-600", bg: "bg-pink-50 border-pink-200" },
-  TodoWrite: { label: "TODO", color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200" },
-  TodoRead: { label: "TODO", color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200" },
+const TOOL_LABELS: Record<string, string> = {
+  Read: "READ",
+  Edit: "EDIT",
+  Write: "WRITE",
+  Bash: "RUN",
+  Glob: "FIND",
+  Grep: "SEARCH",
+  Task: "TASK",
+  Skill: "SKILL",
+  TodoWrite: "TODO",
+  TodoRead: "TODO",
 };
 
 function ToolBlock({ tool, target }: { tool: string; target: string }) {
-  const style = TOOL_STYLES[tool] ?? {
-    label: tool.toUpperCase(),
-    color: "text-neutral-600",
-    bg: "bg-neutral-50 border-neutral-200",
-  };
+  const label = TOOL_LABELS[tool] ?? tool.toUpperCase();
 
   return (
-    <div className={cn("flex items-center gap-1.5 rounded border px-2 py-1 my-1", style.bg)}>
-      <span
-        className={cn(
-          "text-[9px] font-bold uppercase tracking-wider shrink-0",
-          style.color
-        )}
-      >
-        {style.label}
+    <div className="flex items-center gap-1.5 border-l-2 border-neutral-200 bg-neutral-50 px-2 py-1 my-1">
+      <span className="text-xs font-bold uppercase tracking-wider shrink-0 text-neutral-500">
+        {label}
       </span>
-      <span className="text-[10px] font-mono text-neutral-600 truncate">
+      <span className="text-xs font-mono text-neutral-500 truncate">
         {target}
       </span>
     </div>
@@ -114,7 +105,7 @@ function ToolBlock({ tool, target }: { tool: string; target: string }) {
 
 function ResultLine({ text }: { text: string }) {
   return (
-    <div className="text-[10px] text-green-600 font-mono pl-2 border-l-2 border-green-200 my-1">
+    <div className="text-xs text-neutral-500 font-mono pl-2 border-l-2 border-neutral-300 my-1">
       {text}
     </div>
   );
@@ -122,11 +113,11 @@ function ResultLine({ text }: { text: string }) {
 
 function QuestionBlock({ text }: { text: string }) {
   return (
-    <div className="my-2 px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-200">
-      <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-500 block mb-1">
+    <div className="my-2 px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-500/30">
+      <span className="text-xs font-bold uppercase tracking-wider text-orange-600 block mb-1">
         Question
       </span>
-      <p className="text-xs text-indigo-900 leading-relaxed">{text}</p>
+      <p className="text-sm text-neutral-800 leading-relaxed">{text}</p>
     </div>
   );
 }
@@ -143,13 +134,13 @@ function OptionButton({
   return (
     <button
       onClick={() => onSelect(label)}
-      className="w-full text-left my-0.5 px-3 py-1.5 rounded border border-indigo-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 transition-colors group"
+      className="w-full text-left my-0.5 px-3 py-1.5 rounded border border-neutral-200 bg-white hover:bg-orange-500/10 hover:border-orange-500/30 transition-colors group"
     >
-      <span className="text-xs font-medium text-indigo-700 group-hover:text-indigo-900">
+      <span className="text-sm font-medium text-neutral-800 group-hover:text-neutral-900">
         {label}
       </span>
       {description && (
-        <span className="text-[10px] text-neutral-500 block mt-0.5">{description}</span>
+        <span className="text-xs text-neutral-500 block mt-0.5">{description}</span>
       )}
     </button>
   );
@@ -157,11 +148,11 @@ function OptionButton({
 
 function PlanIndicator({ text }: { text: string }) {
   return (
-    <div className="flex items-center gap-1.5 my-2 px-3 py-2 rounded-lg bg-violet-50 border border-violet-200">
-      <span className="text-[9px] font-bold uppercase tracking-wider text-violet-500 shrink-0">
+    <div className="flex items-center gap-1.5 my-2 px-3 py-2 rounded-lg bg-neutral-50 border border-neutral-200">
+      <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 shrink-0">
         Plan Mode
       </span>
-      <span className="text-[10px] text-violet-700">{text}</span>
+      <span className="text-xs text-neutral-600">{text}</span>
     </div>
   );
 }
@@ -229,19 +220,19 @@ function QuestionWizard({
   return (
     <div className="my-2">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-500">
+        <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">
           Question {step + 1} of {groups.length}
         </span>
         <div className="flex-1 h-1 rounded-full bg-neutral-100 overflow-hidden">
           <div
-            className="h-full bg-indigo-400 rounded-full transition-all"
+            className="h-full bg-orange-500 rounded-full transition-all"
             style={{ width: `${((step + 1) / groups.length) * 100}%` }}
           />
         </div>
       </div>
 
-      <div className="px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-200 mb-2">
-        <p className="text-xs text-indigo-900 leading-relaxed">{current.question}</p>
+      <div className="px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-500/30 mb-2">
+        <p className="text-sm text-neutral-800 leading-relaxed">{current.question}</p>
       </div>
 
       <div className="space-y-0.5">
@@ -252,13 +243,13 @@ function QuestionWizard({
             className={cn(
               "w-full text-left px-3 py-1.5 rounded border transition-colors",
               selected === opt.label
-                ? "bg-indigo-100 border-indigo-400"
-                : "bg-white border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300"
+                ? "bg-orange-500/20 border-orange-500"
+                : "bg-white border-neutral-200 hover:bg-orange-500/10 hover:border-orange-500/30"
             )}
           >
-            <span className="text-xs font-medium text-indigo-700">{opt.label}</span>
+            <span className="text-sm font-medium text-neutral-800">{opt.label}</span>
             {opt.description && (
-              <span className="text-[10px] text-neutral-500 block mt-0.5">
+              <span className="text-xs text-neutral-500 block mt-0.5">
                 {opt.description}
               </span>
             )}
@@ -270,7 +261,7 @@ function QuestionWizard({
         {step > 0 && (
           <button
             onClick={() => setStep((s) => s - 1)}
-            className="px-2.5 py-1 rounded text-[10px] font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 transition-colors"
+            className="px-2.5 py-1 rounded text-xs font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 transition-colors"
           >
             Back
           </button>
@@ -281,9 +272,9 @@ function QuestionWizard({
             onClick={handleSubmit}
             disabled={!selected}
             className={cn(
-              "px-3 py-1 rounded text-[10px] font-medium transition-colors",
+              "px-3 py-1 rounded text-xs font-medium transition-colors",
               selected
-                ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                ? "bg-orange-500 text-white hover:bg-orange-600"
                 : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
             )}
           >
@@ -294,9 +285,9 @@ function QuestionWizard({
             onClick={() => setStep((s) => s + 1)}
             disabled={!selected}
             className={cn(
-              "px-3 py-1 rounded text-[10px] font-medium transition-colors",
+              "px-3 py-1 rounded text-xs font-medium transition-colors",
               selected
-                ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                ? "bg-orange-500 text-white hover:bg-orange-600"
                 : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
             )}
           >
@@ -312,9 +303,9 @@ function WizardSummary({ groups, selections }: { groups: QuestionGroup[]; select
   return (
     <div className="my-2 space-y-1">
       {groups.map((g, i) => (
-        <div key={i} className="px-3 py-1.5 rounded bg-indigo-50/50 border border-indigo-100">
-          <span className="text-[10px] text-indigo-500 block">{g.question}</span>
-          <span className="text-xs font-medium text-indigo-800">{selections[i] ?? "—"}</span>
+        <div key={i} className="px-3 py-1.5 rounded bg-neutral-50 border border-neutral-200">
+          <span className="text-xs text-neutral-500 block">{g.question}</span>
+          <span className="text-sm font-medium text-neutral-800">{selections[i] ?? "—"}</span>
         </div>
       ))}
     </div>
@@ -342,7 +333,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
       parts.push(
         <code
           key={key++}
-          className="px-1 py-0.5 rounded bg-neutral-200/60 text-neutral-800 font-mono text-[10px]"
+          className="px-1 py-0.5 rounded bg-neutral-200/60 text-neutral-800 font-mono text-xs"
         >
           {match[4]}
         </code>
@@ -442,7 +433,7 @@ export function AssistantContent({
     <>
       {nodes}
       {isStreaming && (
-        <span className="inline-block w-1 h-3 ml-0.5 bg-neutral-400 animate-pulse align-text-bottom" />
+        <span className="inline-block w-1 h-3.5 ml-0.5 bg-neutral-900 animate-pulse align-text-bottom" />
       )}
     </>
   );

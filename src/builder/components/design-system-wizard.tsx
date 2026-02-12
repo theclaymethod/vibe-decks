@@ -465,7 +465,7 @@ export function DesignSystemWizard() {
                 {generation.status === "generating" ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
                       <span className="text-neutral-500">Analyzing inputs and building design plan...</span>
                     </div>
                     {generation.output && (
@@ -507,7 +507,7 @@ export function DesignSystemWizard() {
               <div className="border border-neutral-200 rounded-lg bg-white p-4 max-h-[500px] overflow-y-auto text-sm">
                 {generation.status === "generating" && (
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
                     <span className="text-neutral-500">Writing design system files...</span>
                   </div>
                 )}

@@ -71,7 +71,7 @@ export function SortableSlideCard({
       className={cn(
         "relative border rounded-lg bg-white transition-all",
         isDragging
-          ? "border-indigo-400 shadow-lg opacity-80 z-10"
+          ? "border-orange-500 shadow-lg opacity-80 z-10"
           : "border-neutral-200",
         isPending && "opacity-60",
         isLocked && "pointer-events-none opacity-50"

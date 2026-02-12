@@ -32,7 +32,7 @@ export function GenerationOutput({ output, status }: GenerationOutputProps) {
         ) : (
           <div className="h-full flex items-center justify-center">
             <div className="flex items-center gap-2 text-neutral-400">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
               <span className="text-sm">Starting generation...</span>
             </div>
           </div>

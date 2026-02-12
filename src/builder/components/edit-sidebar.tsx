@@ -53,7 +53,7 @@ export function EditSidebar({
         onMouseDown={onResizeMouseDown}
         className={cn(
           "absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-10 group",
-          isResizing ? "bg-indigo-400" : "hover:bg-neutral-300"
+          isResizing ? "bg-orange-500" : "hover:bg-neutral-300"
         )}
       />
       {selectedFileKey === "design-system" ? (
@@ -104,7 +104,7 @@ export function EditSidebar({
           className={cn(
             "w-2 h-2 rounded-full",
             status === "idle" && "bg-neutral-300",
-            status === "generating" && "bg-amber-400 animate-pulse",
+            status === "generating" && "bg-orange-500 animate-pulse",
             status === "complete" && "bg-green-500",
             status === "error" && "bg-red-500"
           )}

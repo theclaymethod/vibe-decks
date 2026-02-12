@@ -85,7 +85,7 @@ function ApplyingOverlay({ apply }: ApplyOverlayProps) {
               className={cn(
                 "h-2 flex-1 rounded-full transition-colors",
                 status === "pending" && "bg-neutral-200",
-                status === "processing" && "bg-amber-400 animate-pulse",
+                status === "processing" && "bg-orange-500 animate-pulse",
                 status === "done" && "bg-green-500",
                 status === "error" && "bg-red-500"
               )}

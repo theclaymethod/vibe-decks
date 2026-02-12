@@ -78,7 +78,7 @@ export function GenerationPanel({
           className={cn(
             "w-2 h-2 rounded-full",
             status === "idle" && "bg-neutral-300",
-            status === "generating" && "bg-amber-400 animate-pulse",
+            status === "generating" && "bg-orange-500 animate-pulse",
             status === "complete" && "bg-green-500",
             status === "error" && "bg-red-500"
           )}
