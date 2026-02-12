@@ -395,6 +395,124 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "POST" && req.url === "/api/generate-palette") {
+    log("gen-palette", "request received");
+    try {
+      const body = JSON.parse(await readBody(req));
+      const { prompt, imagePaths } = body as { prompt?: string; imagePaths?: string[] };
+
+      if (!prompt && (!imagePaths || imagePaths.length === 0)) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "prompt or imagePaths required" }));
+        return;
+      }
+
+      log("gen-palette", `prompt: "${(prompt ?? "").slice(0, 80)}" images: ${imagePaths?.length ?? 0}`);
+
+      const claudePromptParts = [
+        "You are a color palette designer. Generate a cohesive 5-color palette plus one accent color.",
+        "",
+        "Requirements:",
+        "- Exactly 5 base colors ordered darkest to lightest",
+        "- 1 accent color that complements the palette",
+        "- A short descriptive name (2-3 words max)",
+        "- Return ONLY valid JSON, no explanation, no markdown fences",
+        "",
+        'Output format: {"name":"...","colors":["#hex","#hex","#hex","#hex","#hex"],"accent":"#hex"}',
+      ];
+
+      if (prompt) {
+        claudePromptParts.push("", `User direction: ${prompt}`);
+      }
+
+      if (imagePaths && imagePaths.length > 0) {
+        const absolutePaths = imagePaths.map((p) => resolve(PROJECT_ROOT, "public" + p));
+        claudePromptParts.push("", "Reference images (read these to extract colors):", ...absolutePaths.map((f) => `- ${f}`));
+      }
+
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      });
+
+      const claude = spawn(
+        "claude",
+        ["-p", claudePromptParts.join("\n"), "--verbose", "--output-format", "stream-json", "--dangerously-skip-permissions"],
+        { cwd: PROJECT_ROOT, stdio: ["ignore", "pipe", "pipe"] }
+      );
+
+      let sseBuffer = "";
+      let collectedText = "";
+
+      claude.stdout?.on("data", (chunk: Buffer) => {
+        const raw = chunk.toString();
+        sseBuffer += raw;
+        const lines = sseBuffer.split("\n");
+        sseBuffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          res.write(`data: ${line}\n\n`);
+
+          try {
+            const parsed = JSON.parse(line);
+            if (parsed.type === "assistant" && parsed.message?.content) {
+              for (const block of parsed.message.content) {
+                if (block.type === "text") collectedText += block.text;
+              }
+            }
+            if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+              collectedText += parsed.delta.text;
+            }
+            if (parsed.type === "result" && parsed.result) {
+              collectedText = parsed.result;
+            }
+          } catch {}
+        }
+      });
+
+      claude.stderr?.on("data", (chunk: Buffer) => {
+        const msg = chunk.toString().trim();
+        if (msg) log("gen-palette", `stderr: ${msg}`);
+      });
+
+      claude.on("close", (code) => {
+        log("gen-palette", `exited code=${code}, collected ${collectedText.length} chars`);
+        try {
+          let text = collectedText.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+          const jsonMatch = text.match(/\{[\s\S]*"name"[\s\S]*"colors"[\s\S]*"accent"[\s\S]*\}/);
+          if (jsonMatch) {
+            const palette = JSON.parse(jsonMatch[0]);
+            if (palette.name && Array.isArray(palette.colors) && palette.colors.length === 5 && palette.accent) {
+              res.write(`data: ${JSON.stringify({ type: "palette", palette })}\n\n`);
+            }
+          }
+        } catch (err) {
+          log("gen-palette", `palette parse error: ${err}`);
+        }
+        res.write(`data: ${JSON.stringify({ type: "done", exitCode: code })}\n\n`);
+        res.end();
+      });
+
+      claude.on("error", (err) => {
+        log("gen-palette", `error: ${err.message}`);
+        res.write(`data: ${JSON.stringify({ type: "error", message: err.message })}\n\n`);
+        res.end();
+      });
+
+      req.on("close", () => {
+        log("gen-palette", "client disconnected, killing process");
+        claude.kill();
+      });
+    } catch (err) {
+      log("gen-palette", `error: ${err}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }));
+    }
+    return;
+  }
+
   if (req.method === "POST" && req.url === "/api/assets/upload") {
     log("assets", "upload request");
     try {
@@ -768,6 +886,23 @@ const server = createServer(async (req, res) => {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       log("git", `push error: ${message}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: message }));
+    }
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/git/revert") {
+    log("git", "revert request");
+    try {
+      execSync("git rev-parse --abbrev-ref @{u}", { cwd: PROJECT_ROOT, encoding: "utf-8" });
+      execSync("git reset --hard @{u}", { cwd: PROJECT_ROOT, encoding: "utf-8", timeout: 10_000 });
+      log("git", "revert succeeded");
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      log("git", `revert error: ${message}`);
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: message }));
     }

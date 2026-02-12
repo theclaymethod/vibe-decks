@@ -27,6 +27,8 @@ export function useGitStatus() {
   const [status, setStatus] = useState<GitStatus>(EMPTY_STATUS);
   const [pushing, setPushing] = useState(false);
   const [pushError, setPushError] = useState<string | null>(null);
+  const [reverting, setReverting] = useState(false);
+  const [revertError, setRevertError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   const refresh = useCallback(async () => {
@@ -64,5 +66,23 @@ export function useGitStatus() {
     }
   }, [refresh]);
 
-  return { ...status, pushing, pushError, push, refresh };
+  const revert = useCallback(async () => {
+    setReverting(true);
+    setRevertError(null);
+    try {
+      const res = await fetch("/api/git/revert", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setRevertError(data.error ?? "Revert failed");
+      } else {
+        await refresh();
+      }
+    } catch (err) {
+      setRevertError(err instanceof Error ? err.message : "Revert failed");
+    } finally {
+      setReverting(false);
+    }
+  }, [refresh]);
+
+  return { ...status, pushing, pushError, push, reverting, revertError, revert, refresh };
 }

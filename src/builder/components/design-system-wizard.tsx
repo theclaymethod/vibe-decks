@@ -50,6 +50,14 @@ export function DesignSystemWizard() {
   const [selectedTypography, setSelectedTypography] = useState<string | null>(null);
   const [selectedPersonality, setSelectedPersonality] = useState<string | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [palettePrompt, setPalettePrompt] = useState("");
+  const [useRefImages, setUseRefImages] = useState(false);
+  const [generatingPalette, setGeneratingPalette] = useState(false);
+  const [paletteStreamOutput, setPaletteStreamOutput] = useState("");
+  const [generatedPalettes, setGeneratedPalettes] = useState<
+    Array<{ name: string; colors: string[]; accent: string }>
+  >([]);
+  const paletteAbortRef = useRef<AbortController | null>(null);
   const [plan, setPlan] = useState("");
 
   const planSessionRef = useRef<string | null>(null);
@@ -71,7 +79,9 @@ export function DesignSystemWizard() {
     const parts: string[] = [];
 
     if (selectedPalette) {
-      const preset = PALETTE_PRESETS.find((p) => p.name === selectedPalette);
+      const preset =
+        PALETTE_PRESETS.find((p) => p.name === selectedPalette) ??
+        generatedPalettes.find((p) => p.name === selectedPalette);
       if (preset) {
         parts.push(`Color palette: "${preset.name}" — primary colors: ${preset.colors.join(", ")}. Accent: ${preset.accent}.`);
       }
@@ -99,7 +109,87 @@ export function DesignSystemWizard() {
     }
 
     return parts.join("\n\n");
-  }, [selectedPalette, customColors, selectedTypography, selectedPersonality, additionalNotes]);
+  }, [selectedPalette, customColors, selectedTypography, selectedPersonality, additionalNotes, generatedPalettes]);
+
+  const handleGeneratePalette = useCallback(async () => {
+    if (!palettePrompt.trim() && !(useRefImages && inspiration.assets.length > 0)) return;
+
+    paletteAbortRef.current?.abort();
+    const controller = new AbortController();
+    paletteAbortRef.current = controller;
+
+    setGeneratingPalette(true);
+    setPaletteStreamOutput("");
+
+    try {
+      const resp = await fetch("/api/generate-palette", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: palettePrompt.trim() || undefined,
+          imagePaths: useRefImages ? inspiration.assets.map((a) => a.path) : undefined,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!resp.ok) throw new Error("Generation failed");
+
+      const reader = resp.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let output = "";
+      const seenToolIds = new Set<string>();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.type === "palette" && parsed.palette) {
+              setGeneratedPalettes((prev) => [...prev, parsed.palette]);
+              setSelectedPalette(parsed.palette.name);
+            }
+
+            if (parsed.type === "done" || parsed.type === "result") break;
+
+            if (parsed.type === "assistant" && parsed.message?.content) {
+              for (const block of parsed.message.content) {
+                if (block.type === "text") {
+                  output += block.text;
+                } else if (block.type === "tool_use") {
+                  if (block.id && seenToolIds.has(block.id)) continue;
+                  if (block.id) seenToolIds.add(block.id);
+                  const target = block.input?.file_path ?? block.input?.pattern ?? block.input?.command?.slice(0, 80) ?? "";
+                  output += `\n[${block.name}] ${target}\n`;
+                }
+              }
+              setPaletteStreamOutput(output);
+            }
+
+            if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+              output += parsed.delta.text;
+              setPaletteStreamOutput(output);
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        console.error("Palette generation failed:", err);
+      }
+    } finally {
+      setGeneratingPalette(false);
+    }
+  }, [palettePrompt, useRefImages, inspiration.assets]);
 
   const generatePlan = useCallback(async () => {
     setStep("plan");
@@ -313,6 +403,90 @@ export function DesignSystemWizard() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="border border-neutral-200 rounded-lg bg-white p-4 space-y-3">
+              <h3 className="text-xs font-medium text-neutral-700">Generate with AI</h3>
+              <textarea
+                value={palettePrompt}
+                onChange={(e) => setPalettePrompt(e.target.value)}
+                placeholder="e.g., warm earth tones with a pop of coral"
+                rows={2}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-neutral-50 focus:border-neutral-400 outline-none resize-none"
+              />
+              {inspiration.assets.length > 0 && (
+                <label className="flex items-center gap-2 text-xs text-neutral-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useRefImages}
+                    onChange={(e) => setUseRefImages(e.target.checked)}
+                    className="rounded border-neutral-300"
+                  />
+                  Include reference images from step 1
+                </label>
+              )}
+              <button
+                onClick={handleGeneratePalette}
+                disabled={generatingPalette || (!palettePrompt.trim() && !(useRefImages && inspiration.assets.length > 0))}
+                className={cn(
+                  "px-4 py-2 text-xs font-medium rounded-lg transition-colors",
+                  generatingPalette || (!palettePrompt.trim() && !(useRefImages && inspiration.assets.length > 0))
+                    ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                    : "bg-neutral-800 text-white hover:bg-neutral-700"
+                )}
+              >
+                {generatingPalette ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-3 h-3 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+                    Generating...
+                  </span>
+                ) : (
+                  "Generate"
+                )}
+              </button>
+              {generatingPalette && paletteStreamOutput && (
+                <div className="border border-neutral-200 rounded-lg bg-neutral-50 p-3 max-h-48 overflow-y-auto text-xs">
+                  <AssistantContent text={paletteStreamOutput} isStreaming={true} />
+                </div>
+              )}
+              {generatedPalettes.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  {generatedPalettes.map((palette) => (
+                    <button
+                      key={palette.name}
+                      onClick={() => setSelectedPalette(palette.name)}
+                      className={cn(
+                        "w-full flex items-center gap-4 p-4 rounded-lg border-2 text-left transition-colors",
+                        selectedPalette === palette.name
+                          ? "border-neutral-900 bg-neutral-50"
+                          : "border-neutral-200 hover:border-neutral-300 bg-white"
+                      )}
+                    >
+                      <div className="flex gap-1 shrink-0">
+                        {palette.colors.map((c, i) => (
+                          <div
+                            key={i}
+                            className="w-8 h-8 border border-neutral-200"
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                        <div
+                          className="w-8 h-8 border border-neutral-200 ml-2"
+                          style={{ backgroundColor: palette.accent }}
+                        />
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-neutral-800">
+                          {palette.name}
+                        </span>
+                        <span className="text-xs text-neutral-400 ml-2">
+                          accent: {palette.accent}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
