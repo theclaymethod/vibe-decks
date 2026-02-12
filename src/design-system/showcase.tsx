@@ -103,7 +103,7 @@ function ColorSwatch({
       >
         <span
           className="text-[14px] font-mono font-medium"
-          style={{ color: textDark ? "#0A0A0A" : "#FFFFFF" }}
+          style={{ color: textDark ? "#1a0a0a" : "#faf5f0" }}
         >
           {value}
         </span>
@@ -179,7 +179,6 @@ export function DesignSystemShowcase() {
   return (
     <div style={{ width: 1920 }}>
 
-      {/* Cover */}
       <SlideContainer mode="dark" className="h-[1080px]">
         <div className="flex flex-col justify-between h-full">
           <HeaderBar
@@ -202,7 +201,6 @@ export function DesignSystemShowcase() {
         </div>
       </SlideContainer>
 
-      {/* 01 — Brand Overview */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={1} title="Brand Overview">
           <TwoColumnLayout
@@ -210,20 +208,21 @@ export function DesignSystemShowcase() {
             left={
               <div className="space-y-6">
                 <BodyText size="lg">
-                  The visual identity is rooted in industrial design and Swiss typography.
-                  We use high-contrast black and white as the primary palette, with signal yellow
-                  as a single accent color. Every element earns its place on the slide — no
-                  decoration without purpose.
+                  The Ember Luxe visual identity fuses editorial refinement with technical precision.
+                  We use a rich palette of deep ember tones — ranging from charcoal black to warm terracotta —
+                  anchored by a golden accent. Every element earns its place on the slide. No soft edges,
+                  no gradients, no decoration without purpose.
                 </BodyText>
                 <BodyText>
-                  The system favors stark geometry over soft gradients, monospaced labeling over
+                  The system favors sharp geometry over softness, monospaced technical labels over
                   decorative flourishes, and generous negative space over visual density. Slides
-                  should feel like architectural blueprints: precise, intentional, and confident.
+                  should feel like architectural drawings rendered in a warm, sophisticated palette:
+                  precise, intentional, and confident.
                 </BodyText>
                 <BodyText>
-                  Type hierarchy is enforced through scale contrast rather than weight variation.
-                  Headlines are set in Bebas Neue at dramatic sizes. Body copy in Inter provides
-                  neutral readability. JetBrains Mono handles technical labels and data.
+                  Type hierarchy is enforced through scale contrast and serif authority. Headlines are set
+                  in Playfair Display with dramatic scale. Body copy in Source Serif Pro provides classic
+                  readability. IBM Plex Mono handles technical labels and data with geometric precision.
                 </BodyText>
               </div>
             }
@@ -233,7 +232,7 @@ export function DesignSystemShowcase() {
                 <CategoryGrid
                   items={[
                     { title: "Precision", icon: "cross" },
-                    { title: "Contrast", icon: "star" },
+                    { title: "Warmth", icon: "star" },
                     { title: "Restraint", icon: "dots" },
                     { title: "Clarity", icon: "arrow" },
                   ]}
@@ -244,90 +243,88 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 02 — Color Palette */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={2} title="Color Palette">
           <BodyText className="mb-10 max-w-[1000px]">
-            The palette is intentionally minimal. Black and white do the heavy lifting.
-            Yellow is reserved for moments of emphasis — a highlighted label, an active state,
-            an accent slide. Secondary grays provide hierarchy without introducing new hues.
-            This constraint forces clarity: if a slide needs color to make sense, the layout
-            needs rethinking.
+            The Ember Luxe palette is sophisticated and restrained. Deep ember tones provide warmth
+            without sacrificing contrast. The accent gold is reserved for moments of emphasis — a highlighted
+            label, an active state, an accent slide. This constraint forces clarity: if a slide needs
+            more color to make sense, the layout needs rethinking.
           </BodyText>
 
           <Eyebrow className="mb-6">Primary</Eyebrow>
           <GridSection columns={3} gap="lg" className="mb-12">
-            <ColorSwatch name="Black" value="#0A0A0A" cssVar="--color-black" textDark={false} />
-            <ColorSwatch name="White" value="#FFFFFF" cssVar="--color-white" />
-            <ColorSwatch name="Signal Yellow" value="#FCD94B" cssVar="--color-yellow" />
+            <ColorSwatch name="Deep Charcoal" value="#1a0a0a" cssVar="--color-black" textDark={false} />
+            <ColorSwatch name="Warm Off-White" value="#faf5f0" cssVar="--color-white" />
+            <ColorSwatch name="Ember Red" value="#c4452a" cssVar="--color-ember" />
+          </GridSection>
+
+          <Eyebrow className="mb-6">Extended</Eyebrow>
+          <GridSection columns={4} gap="lg" className="mb-12">
+            <ColorSwatch name="Ember Muted" value="#8b2520" cssVar="--color-ember-muted" textDark={false} />
+            <ColorSwatch name="Golden Accent" value="#f5c16c" cssVar="--color-accent" />
+            <ColorSwatch name="Secondary BG" value="#f0e8e0" cssVar="--color-bg-secondary" />
+            <ColorSwatch name="Dark Warm" value="#3d1f1a" cssVar="--color-bg-dark-secondary" textDark={false} />
           </GridSection>
 
           <Eyebrow className="mb-6">Text Hierarchy</Eyebrow>
-          <GridSection columns={4} gap="lg" className="mb-12">
-            <ColorSwatch name="Primary" value="#0A0A0A" cssVar="--color-text-primary" textDark={false} />
-            <ColorSwatch name="Secondary" value="#333333" cssVar="--color-text-secondary" textDark={false} />
-            <ColorSwatch name="Muted" value="#888888" cssVar="--color-text-muted" textDark={false} />
-            <ColorSwatch name="Inverse" value="#FFFFFF" cssVar="--color-text-inverse" />
-          </GridSection>
-
-          <Eyebrow className="mb-6">Backgrounds</Eyebrow>
-          <GridSection columns={3} gap="lg">
-            <ColorSwatch name="Primary BG" value="#FFFFFF" cssVar="--color-bg-primary" />
-            <ColorSwatch name="Secondary BG" value="#F5F5F5" cssVar="--color-bg-secondary" />
-            <ColorSwatch name="Dark BG" value="#0A0A0A" cssVar="--color-bg-dark" textDark={false} />
+          <GridSection columns={4} gap="lg">
+            <ColorSwatch name="Primary" value="#1a0a0a" cssVar="--color-text-primary" textDark={false} />
+            <ColorSwatch name="Secondary" value="#4a1215" cssVar="--color-text-secondary" textDark={false} />
+            <ColorSwatch name="Muted" value="#7a5c55" cssVar="--color-text-muted" textDark={false} />
+            <ColorSwatch name="Inverse" value="#faf5f0" cssVar="--color-text-inverse" />
           </GridSection>
         </BriefSection>
       </SlideContainer>
 
-      {/* 03 — Typography */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={3} title="Typography">
           <BodyText className="mb-10 max-w-[1000px]">
-            Three typefaces, each with a distinct role. Bebas Neue is the voice — bold,
-            condensed, all-caps. It commands attention at hero scale and maintains
-            authority at section headers. Inter is the workhorse — clean, neutral, optimized
-            for screen reading at any size. JetBrains Mono provides technical precision
+            Three typefaces, each with a distinct role. Playfair Display is the voice — elegant,
+            refined, commanding. It brings editorial authority at hero scale and maintains
+            gravitas at section headers. Source Serif Pro is the workhorse — warm, neutral,
+            optimized for long-form reading. IBM Plex Mono provides technical precision
             for labels, codes, and data that needs to align cleanly.
           </BodyText>
 
           <TypeSpecimen
             label="HERO TITLE"
-            spec="Bebas Neue · 140px · leading 0.85 · tracking -0.02em · uppercase"
+            spec="Playfair Display · 140px · leading 0.85 · tracking -0.02em"
             component={<HeroTitle>Aa Bb Cc</HeroTitle>}
           />
           <TypeSpecimen
             label="SECTION HEADER"
-            spec="Bebas Neue · 72px · leading 0.9 · tracking -0.01em · uppercase"
+            spec="Playfair Display · 72px · leading 0.9 · tracking -0.01em"
             component={<SectionHeader>Section Header Text</SectionHeader>}
           />
           <TypeSpecimen
             label="EYEBROW"
-            spec="Inter · 18px · tracking 0.15em · uppercase · semibold"
+            spec="Source Serif Pro · 18px · tracking 0.15em · uppercase · semibold"
             component={<Eyebrow>Eyebrow Label</Eyebrow>}
           />
           <TypeSpecimen
             label="BODY LARGE"
-            spec="Inter · 28px · leading 1.6"
+            spec="Source Serif Pro · 28px · leading 1.6"
             component={<BodyText size="lg">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</BodyText>}
           />
           <TypeSpecimen
             label="BODY MEDIUM"
-            spec="Inter · 24px · leading 1.6"
+            spec="Source Serif Pro · 24px · leading 1.6"
             component={<BodyText>The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</BodyText>}
           />
           <TypeSpecimen
             label="BODY SMALL"
-            spec="Inter · 20px · leading 1.5"
+            spec="Source Serif Pro · 20px · leading 1.5"
             component={<BodyText size="sm">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.</BodyText>}
           />
           <TypeSpecimen
             label="MONO TEXT"
-            spec="Inter · 20px · leading 1.6"
+            spec="Source Serif Pro · 20px · leading 1.6"
             component={<MonoText>Mono 0123456789 — used for secondary technical text</MonoText>}
           />
           <TypeSpecimen
             label="TECH CODE"
-            spec="JetBrains Mono · 14–22px · tracking 0.1em · uppercase"
+            spec="IBM Plex Mono · 14–22px · tracking 0.1em · uppercase"
             component={
               <div className="flex items-baseline gap-8">
                 <TechCode size="lg">TECH LG</TechCode>
@@ -338,7 +335,7 @@ export function DesignSystemShowcase() {
           />
           <TypeSpecimen
             label="QUOTE"
-            spec="Bebas Neue · 52px · leading 1.2 · uppercase"
+            spec="Playfair Display · 52px · leading 1.2"
             component={
               <Quote attribution="Attribution Name, Role">
                 Design is not just what it looks like. Design is how it works.
@@ -348,7 +345,6 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 04 — Labels & Lists */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={4} title="Labels & Lists">
           <BodyText className="mb-10 max-w-[1000px]">
@@ -390,14 +386,13 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 05 — Component Library */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={5} title="Component Library">
           <BodyText className="mb-10 max-w-[1000px]">
             Components are the building blocks for slides. Each is designed to work
             independently or in combination. They inherit the active color mode
             through CSS variables — the same StatCard renders correctly on white,
-            dark, or yellow backgrounds without any code changes.
+            dark, or ember backgrounds without any code changes.
           </BodyText>
 
           <Eyebrow className="mb-6">Feature Cards</Eyebrow>
@@ -426,7 +421,7 @@ export function DesignSystemShowcase() {
 
           <Eyebrow className="mb-6">Stat Cards</Eyebrow>
           <BodyText size="sm" className="mb-4">
-            For key metrics. The value is set in Bebas Neue at 96px for maximum impact.
+            For key metrics. The value is set in Playfair Display at 96px for maximum impact.
           </BodyText>
           <GridSection columns={4} className="mb-16">
             <StatCard value="99.9%" label="Uptime" sublabel="Last 12 months" className="border-2" />
@@ -468,7 +463,6 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 06 — Decorative Language */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={6} title="Decorative Language">
           <BodyText className="mb-10 max-w-[1000px]">
@@ -544,11 +538,10 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 07 — Color Modes */}
       <SlideContainer mode="dark" className="h-auto min-h-[1080px]">
         <BriefSection number={7} title="Color Modes">
           <BodyText className="mb-8 max-w-[1000px]">
-            Three modes — white, dark, and yellow — control the entire palette through
+            Three modes — white, dark, and ember — control the entire palette through
             CSS custom properties. Components never reference literal colors. Every
             element reads from the active mode's variables, so switching context is a
             single attribute change on the slide container.
@@ -556,8 +549,8 @@ export function DesignSystemShowcase() {
 
           <Eyebrow className="mb-4">Dark Mode (active)</Eyebrow>
           <BodyText size="sm" className="mb-6">
-            The inverted palette. White text on black. Borders flip to white. Used for
-            emphasis slides, section breaks, and dramatic contrast.
+            The inverted palette. Warm off-white text on deep charcoal. Borders flip to light.
+            Used for emphasis slides, section breaks, and dramatic contrast.
           </BodyText>
 
           <GridSection columns={3} className="mb-16">
@@ -578,16 +571,16 @@ export function DesignSystemShowcase() {
       </SlideContainer>
 
       <SlideContainer mode="yellow" className="h-auto min-h-[1080px]">
-        <BriefSection number={7} title="Yellow Mode">
+        <BriefSection number={7} title="Ember Mode">
           <BodyText className="mb-8 max-w-[1000px]">
-            The accent mode. Signal yellow (#FCD94B) floods the background. Text stays
-            black for maximum legibility. Use for title slides, callouts, or any moment
-            that needs to break the rhythm of black-and-white.
+            The accent mode. Ember red floods the background. Text stays dark for maximum
+            legibility. Use for title slides, callouts, or any moment that needs to break
+            the rhythm of neutral tones. This is where warmth meets authority.
           </BodyText>
 
           <GridSection columns={2} className="mb-12">
             <QuoteCard
-              quote="Yellow demands attention."
+              quote="Ember red demands attention with sophistication."
               attribution="Creative Director"
               role="Brand Team"
               className="border-2"
@@ -596,13 +589,12 @@ export function DesignSystemShowcase() {
               <Label>Default Label</Label>
               <Label variant="dark">Dark Label</Label>
               <Divider />
-              <PipeList items={["Bold", "Bright", "Intentional"]} />
+              <PipeList items={["Bold", "Warm", "Intentional"]} />
             </div>
           </GridSection>
         </BriefSection>
       </SlideContainer>
 
-      {/* 08 — Usage Guidelines */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={8} title="Usage Guidelines">
           <TwoColumnLayout
@@ -627,7 +619,7 @@ export function DesignSystemShowcase() {
                   <Eyebrow className="mb-4">Avoid</Eyebrow>
                   <div className="space-y-3">
                     <ListItem number={1}>Rounded corners — the system uses sharp geometry exclusively</ListItem>
-                    <ListItem number={2}>Gradients, shadows, or blur effects</ListItem>
+                    <ListItem number={2}>Gradients, shadows, or blur effects on static components</ListItem>
                     <ListItem number={3}>More than one accent color per slide</ListItem>
                     <ListItem number={4}>Decorative elements that don't serve information hierarchy</ListItem>
                     <ListItem number={5}>Tailwind color classes — always use CSS variable style props</ListItem>
@@ -639,7 +631,6 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 09 — Interactive Primitives */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={9} title="Interactive Primitives">
           <BodyText className="mb-6 max-w-[1000px]">
@@ -708,7 +699,6 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 10 — Expandable Patterns */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={10} title="Expandable Patterns">
           <BodyText className="mb-6 max-w-[1000px]">
@@ -735,8 +725,8 @@ export function DesignSystemShowcase() {
               }
             >
               <BodyText size="sm">
-                Precision over decoration. The system uses high-contrast black and white,
-                sharp geometry, and generous negative space. Every element earns its place —
+                Editorial refinement meets technical precision. The system uses warm ember tones
+                with sharp geometry and generous negative space. Every element earns its place —
                 no gradients, no blur, no rounded corners on static components. Interactive
                 states get relaxed rules: shadows and soft radii signal that an element responds
                 to user input.
@@ -753,7 +743,7 @@ export function DesignSystemShowcase() {
               }
             >
               <BodyText size="sm">
-                Three modes — white, dark, and yellow — controlled by CSS custom properties.
+                Three modes — white, dark, and ember — controlled by CSS custom properties.
                 Components never reference literal colors. A single data attribute on the
                 SlideContainer switches the entire palette. Interactive wrappers inherit
                 the active mode automatically.
@@ -807,7 +797,6 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 11 — Hover & Caption */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={11} title="Hover & Caption">
           <BodyText className="mb-6 max-w-[1000px]">
@@ -856,7 +845,7 @@ export function DesignSystemShowcase() {
             >
               <div
                 className="h-48 flex items-center justify-center"
-                style={{ backgroundColor: "var(--color-yellow)" }}
+                style={{ backgroundColor: "var(--color-accent)" }}
               >
                 <SectionHeader className="text-[36px]">Block B</SectionHeader>
               </div>
@@ -883,13 +872,12 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 12 — Data Visualization */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={12} title="Data Visualization">
           <BodyText className="mb-6 max-w-[1000px]">
             Lightweight, SVG-based data primitives for metrics, trends, and ratings.
             All components reference CSS variables for color — they adapt automatically
-            across white, dark, and yellow modes without props.
+            across white, dark, and ember modes without props.
           </BodyText>
 
           <Eyebrow className="mb-6">Progress Ring</Eyebrow>
@@ -984,7 +972,6 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 13 — Tabs & Carousels */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={13} title="Tabs & Carousels">
           <BodyText className="mb-6 max-w-[1000px]">
@@ -1049,7 +1036,6 @@ export function DesignSystemShowcase() {
         </BriefSection>
       </SlideContainer>
 
-      {/* 14 — Effects & Utilities */}
       <SlideContainer mode="white" className="h-auto min-h-[1080px]">
         <BriefSection number={14} title="Effects & Utilities">
           <BodyText className="mb-6 max-w-[1000px]">
@@ -1091,8 +1077,8 @@ export function DesignSystemShowcase() {
               <Label>Default</Label>
             </div>
             <div className="flex items-center gap-4">
-              <PulseRing size={32} color="var(--color-yellow)" />
-              <Label>Yellow accent</Label>
+              <PulseRing size={32} color="var(--color-accent)" />
+              <Label>Golden accent</Label>
             </div>
             <div className="flex items-center gap-4">
               <PulseRing size={40} />

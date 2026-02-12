@@ -12,7 +12,7 @@ export function HeroTitle({
   return (
     <h1
       className={cn(
-        "text-[140px] leading-[0.85] tracking-[-0.02em] uppercase",
+        "text-[140px] leading-[0.9] tracking-[-0.03em]",
         className
       )}
       style={{
@@ -37,7 +37,7 @@ export function SectionHeader({
   return (
     <h2
       className={cn(
-        "text-[72px] leading-[0.9] tracking-[-0.01em] uppercase",
+        "text-[72px] leading-[0.95] tracking-[-0.02em]",
         className
       )}
       style={{
@@ -63,9 +63,9 @@ export function CategoryLabel({
   return (
     <div className={cn("space-y-1", className)}>
       <div
-        className="text-[20px] font-semibold tracking-[0.05em] uppercase"
+        className="text-[20px] font-semibold tracking-[0.04em] uppercase"
         style={{
-          fontFamily: "var(--font-body)",
+          fontFamily: "var(--font-mono)",
           color: "var(--color-text-primary)",
         }}
       >
@@ -73,7 +73,7 @@ export function CategoryLabel({
       </div>
       {subtitle && (
         <div
-          className="text-[18px] tracking-[0.02em]"
+          className="text-[18px] tracking-[0.01em]"
           style={{
             fontFamily: "var(--font-body)",
             color: "var(--color-text-secondary)",
@@ -105,7 +105,7 @@ export function TechCode({
     <span
       className={cn(
         sizeClasses[size],
-        "tracking-[0.1em] uppercase",
+        "tracking-[0.08em] uppercase",
         className
       )}
       style={{
@@ -129,14 +129,18 @@ export function SectionMarker({
 }) {
   return (
     <div
-      className={cn("text-[18px] tracking-[0.05em]", className)}
+      className={cn("text-[18px] tracking-[0.04em]", className)}
       style={{
-        fontFamily: "var(--font-body)",
+        fontFamily: "var(--font-mono)",
         color: "var(--color-text-secondary)",
       }}
     >
       <span className="font-medium">{String(number).padStart(2, "0")}.</span>{" "}
-      <span>{label}</span>
+      <span
+        style={{ fontFamily: "var(--font-body)" }}
+      >
+        {label}
+      </span>
     </div>
   );
 }
@@ -151,12 +155,12 @@ export function Eyebrow({
   return (
     <span
       className={cn(
-        "inline-block text-[18px] tracking-[0.15em] uppercase font-medium",
+        "inline-block text-[18px] tracking-[0.12em] uppercase font-medium",
         className
       )}
       style={{
-        fontFamily: "var(--font-body)",
-        color: "var(--color-text-secondary)",
+        fontFamily: "var(--font-mono)",
+        color: "var(--color-text-muted)",
       }}
     >
       {children}
@@ -227,23 +231,23 @@ export function Quote({
   return (
     <blockquote className={cn("relative", className)}>
       <p
-        className="text-[52px] leading-[1.2] uppercase"
+        className="text-[48px] leading-[1.15] italic"
         style={{
           fontFamily: "var(--font-heading)",
           color: "var(--color-text-primary)",
         }}
       >
-        "{children}"
+        &ldquo;{children}&rdquo;
       </p>
       {attribution && (
         <cite
-          className="block mt-6 text-[18px] tracking-[0.15em] uppercase not-italic font-medium"
+          className="block mt-6 text-[16px] tracking-[0.08em] uppercase not-italic font-medium"
           style={{
-            fontFamily: "var(--font-body)",
+            fontFamily: "var(--font-mono)",
             color: "var(--color-text-muted)",
           }}
         >
-          — {attribution}
+          &mdash; {attribution}
         </cite>
       )}
     </blockquote>
@@ -261,7 +265,7 @@ export function SlideNumber({
 }) {
   return (
     <div
-      className={cn("text-[18px] tracking-[0.15em] uppercase font-medium", className)}
+      className={cn("text-[18px] tracking-[0.1em] uppercase font-medium", className)}
       style={{
         fontFamily: "var(--font-mono)",
         color: "var(--color-text-muted)",
@@ -325,7 +329,12 @@ export function PipeList({
         <span key={i}>
           {item}
           {i < items.length - 1 && (
-            <span className="mx-2 opacity-50">|</span>
+            <span
+              className="mx-2"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              /
+            </span>
           )}
         </span>
       ))}
@@ -349,9 +358,9 @@ export function Label({
       borderColor: "var(--color-border)",
     },
     primary: {
-      backgroundColor: "var(--color-yellow)",
+      backgroundColor: "var(--color-accent)",
       color: "var(--color-black)",
-      borderColor: "var(--color-yellow)",
+      borderColor: "var(--color-accent)",
     },
     dark: {
       backgroundColor: "var(--color-black)",
@@ -363,11 +372,11 @@ export function Label({
   return (
     <span
       className={cn(
-        "inline-flex items-center px-4 py-2 text-[16px] tracking-[0.1em] uppercase font-semibold border-2",
+        "inline-flex items-center px-4 py-2 text-[14px] tracking-[0.08em] uppercase font-semibold border-2",
         className
       )}
       style={{
-        fontFamily: "var(--font-body)",
+        fontFamily: "var(--font-mono)",
         ...variantStyles[variant],
       }}
     >

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useSpring, useTransform } from "motion/react";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ export function ProgressRing({
   const offset = circumference * (1 - clamped / 100);
 
   const resolvedColor =
-    color ?? (clamped >= 80 ? "var(--color-text-primary)" : "var(--color-text-muted)");
+    color ?? (clamped >= 80 ? "var(--color-accent)" : "var(--color-text-muted)");
 
   return (
     <div
@@ -29,10 +29,11 @@ export function ProgressRing({
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} className="rotate-[-90deg]">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
+        <rect
+          x={0}
+          y={0}
+          width={size}
+          height={size}
           fill="none"
           stroke="var(--color-border-light)"
           strokeWidth={strokeWidth}
@@ -113,7 +114,7 @@ export function TrendIndicator({
   const textSize = { sm: "14px", md: "16px", lg: "18px" }[size];
 
   const colors = {
-    up: "var(--color-text-primary)",
+    up: "var(--color-accent)",
     down: "var(--color-text-muted)",
     flat: "var(--color-text-muted)",
   };
@@ -172,7 +173,7 @@ export function Sparkline({
 
   const trendUp = data[data.length - 1] > data[0];
   const resolvedColor =
-    color ?? (trendUp ? "var(--color-text-primary)" : "var(--color-text-muted)");
+    color ?? (trendUp ? "var(--color-accent)" : "var(--color-text-muted)");
 
   const lastX = padding + ((data.length - 1) / (data.length - 1)) * (width - padding * 2);
   const lastY =
@@ -190,10 +191,16 @@ export function Sparkline({
         fill="none"
         stroke={resolvedColor}
         strokeWidth={1.5}
-        strokeLinejoin="round"
-        strokeLinecap="round"
+        strokeLinejoin="miter"
+        strokeLinecap="butt"
       />
-      <circle cx={lastX} cy={lastY} r={2.5} fill={resolvedColor} />
+      <rect
+        x={lastX - 2.5}
+        y={lastY - 2.5}
+        width={5}
+        height={5}
+        fill={resolvedColor}
+      />
     </svg>
   );
 }
@@ -232,21 +239,29 @@ export function HarveyBall({
       viewBox={`0 0 ${size} ${size}`}
       className={className}
     >
-      <circle
-        cx={center}
-        cy={center}
-        r={radius}
+      <rect
+        x={1}
+        y={1}
+        width={size - 2}
+        height={size - 2}
         fill="var(--color-bg-secondary)"
       />
       {fraction === 1 ? (
-        <circle cx={center} cy={center} r={radius} fill="var(--color-text-primary)" />
+        <rect
+          x={1}
+          y={1}
+          width={size - 2}
+          height={size - 2}
+          fill="var(--color-text-primary)"
+        />
       ) : fraction > 0 ? (
         <path d={getArcPath(fraction)} fill="var(--color-text-primary)" />
       ) : null}
-      <circle
-        cx={center}
-        cy={center}
-        r={radius}
+      <rect
+        x={1}
+        y={1}
+        width={size - 2}
+        height={size - 2}
         fill="none"
         stroke="var(--color-text-primary)"
         strokeWidth={1}
@@ -267,7 +282,7 @@ export function MagnitudeBar({
   className?: string;
 }) {
   const clamped = Math.min(max, Math.max(0, value));
-  const resolvedColor = color ?? "var(--color-text-primary)";
+  const resolvedColor = color ?? "var(--color-accent)";
 
   return (
     <div className={cn("flex gap-[3px]", className)}>

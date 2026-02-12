@@ -3,12 +3,12 @@ import { cn } from "@/lib/utils";
 export type IconSymbol = "star" | "cross" | "dots" | "asterisk" | "x" | "arrow" | "plus";
 
 const SYMBOLS: Record<IconSymbol, string> = {
-  star: "✦",
-  cross: "⊕",
+  star: "\u2726",
+  cross: "\u2295",
   dots: "::",
-  asterisk: "✱",
-  x: "×",
-  arrow: "→",
+  asterisk: "\u2731",
+  x: "\u00D7",
+  arrow: "\u2192",
   plus: "+",
 };
 
@@ -96,12 +96,12 @@ export function NavLink({
   return (
     <span
       className={cn(
-        "text-[12px] tracking-[0.1em] uppercase font-medium cursor-pointer",
+        "text-[12px] tracking-[0.08em] uppercase font-medium cursor-pointer",
         active ? "underline underline-offset-4" : "",
         className
       )}
       style={{
-        fontFamily: "var(--font-body)",
+        fontFamily: "var(--font-mono)",
         color: "var(--color-text-primary)",
       }}
     >
@@ -149,9 +149,9 @@ export function CategoryGrid({
           style={{ borderColor: "var(--color-border)" }}
         >
           <div
-            className="text-[13px] font-semibold tracking-[0.05em] uppercase mb-1"
+            className="text-[13px] font-semibold tracking-[0.04em] uppercase mb-1"
             style={{
-              fontFamily: "var(--font-body)",
+              fontFamily: "var(--font-mono)",
               color: "var(--color-text-primary)",
             }}
           >
@@ -196,9 +196,9 @@ export function FeatureBlock({
     <div className={cn("space-y-3", className)}>
       {eyebrow && (
         <div
-          className="text-[11px] tracking-[0.1em] uppercase"
+          className="text-[11px] tracking-[0.08em] uppercase"
           style={{
-            fontFamily: "var(--font-body)",
+            fontFamily: "var(--font-mono)",
             color: "var(--color-text-muted)",
           }}
         >
@@ -211,7 +211,7 @@ export function FeatureBlock({
         </div>
       )}
       <div
-        className="text-[32px] leading-[1] uppercase"
+        className="text-[32px] leading-[1.05]"
         style={{
           fontFamily: "var(--font-heading)",
           color: "var(--color-text-primary)",
@@ -251,17 +251,14 @@ export function CrosshairMark({
       className={cn("relative", className)}
       style={{ width: px, height: px }}
     >
-      {/* Vertical hair */}
       <div
         className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2"
         style={{ width: 1, backgroundColor: "var(--color-border)", opacity: 0.25 }}
       />
-      {/* Horizontal hair */}
       <div
         className="absolute top-1/2 left-0 right-0 -translate-y-1/2"
         style={{ height: 1, backgroundColor: "var(--color-border)", opacity: 0.25 }}
       />
-      {/* Center ring */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{
@@ -271,21 +268,16 @@ export function CrosshairMark({
           opacity: 0.5,
         }}
       />
-      {/* Center dot */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 4, height: 4, backgroundColor: "var(--color-border)" }}
+        style={{ width: 4, height: 4, backgroundColor: "var(--color-accent)" }}
       />
-      {/* Corner ticks — top-left */}
       <div className="absolute top-0 left-0" style={{ width: tick, height: 1, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
       <div className="absolute top-0 left-0" style={{ width: 1, height: tick, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
-      {/* Corner ticks — top-right */}
       <div className="absolute top-0 right-0" style={{ width: tick, height: 1, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
       <div className="absolute top-0 right-0" style={{ width: 1, height: tick, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
-      {/* Corner ticks — bottom-left */}
       <div className="absolute bottom-0 left-0" style={{ width: tick, height: 1, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
       <div className="absolute bottom-0 left-0" style={{ width: 1, height: tick, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
-      {/* Corner ticks — bottom-right */}
       <div className="absolute bottom-0 right-0" style={{ width: tick, height: 1, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
       <div className="absolute bottom-0 right-0" style={{ width: 1, height: tick, backgroundColor: "var(--color-border)", opacity: 0.4 }} />
     </div>

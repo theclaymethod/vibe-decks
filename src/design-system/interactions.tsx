@@ -40,11 +40,11 @@ export function AccordionItem({
         <span>{trigger}</span>
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
           className="text-[24px] leading-none select-none"
           style={{ color: "var(--color-text-muted)" }}
         >
-          ↓
+          &darr;
         </motion.span>
       </button>
       <AnimatePresence initial={false}>
@@ -53,7 +53,7 @@ export function AccordionItem({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
             <div className="pb-5">{children}</div>
@@ -97,9 +97,8 @@ export function ExpandableCard({
       className={cn("cursor-pointer overflow-hidden", className)}
       style={{
         boxShadow: expanded ? "var(--shadow-xl)" : "none",
-        borderRadius: expanded ? "var(--radius-lg)" : "0",
       }}
-      transition={{ layout: { duration: 0.3, ease: "easeOut" } }}
+      transition={{ layout: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } }}
     >
       <motion.div layout="position">{preview}</motion.div>
       <AnimatePresence>
@@ -108,7 +107,7 @@ export function ExpandableCard({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
             {detail}
@@ -119,7 +118,7 @@ export function ExpandableCard({
   );
 }
 
-const LIFT_MAP = { sm: -4, md: -8, lg: -12 } as const;
+const LIFT_MAP = { sm: -3, md: -6, lg: -10 } as const;
 
 export function HoverCard({
   children,
@@ -138,12 +137,11 @@ export function HoverCard({
     <motion.div
       whileHover={{
         y: LIFT_MAP[lift],
-        scale: scale ? 1.02 : 1,
+        scale: scale ? 1.01 : 1,
         boxShadow: shadow ? "var(--shadow-md)" : "none",
       }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.15 }}
       className={className}
-      style={{ borderRadius: "var(--radius-sm)" }}
     >
       {children}
     </motion.div>
@@ -178,12 +176,12 @@ export function HoverCaption({
             initial={{ y: isTop ? "-100%" : "100%" }}
             animate={{ y: 0 }}
             exit={{ y: isTop ? "-100%" : "100%" }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             className="absolute inset-x-0 p-4"
             style={{
               [isTop ? "top" : "bottom"]: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.85)",
-              color: "#FFFFFF",
+              backgroundColor: "rgba(26, 10, 10, 0.9)",
+              color: "#faf5f0",
             }}
           >
             {caption}
@@ -241,8 +239,8 @@ export function AnimatedEntry({
 
 export function StaggerContainer({
   children,
-  stagger = 0.1,
-  delay = 0.2,
+  stagger = 0.08,
+  delay = 0.15,
   className,
 }: {
   children: React.ReactNode;
@@ -264,7 +262,7 @@ export function StaggerContainer({
 
 export function ShineBorder({
   children,
-  color = "var(--color-yellow)",
+  color = "var(--color-accent)",
   radius = 500,
   borderWidth = 3,
   className,
@@ -293,7 +291,7 @@ export function ShineBorder({
   return (
     <div className={cn("relative group", className)} onMouseMove={handleMouseMove}>
       <motion.div
-        className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         style={{
           inset: `-${borderWidth}px`,
           background,
@@ -308,7 +306,7 @@ export function ShineBorder({
 
 export function PulseRing({
   size = 24,
-  color = "var(--color-text-primary)",
+  color = "var(--color-accent)",
   className,
 }: {
   size?: number;
@@ -321,7 +319,7 @@ export function PulseRing({
       style={{ width: size, height: size }}
     >
       <motion.div
-        className="absolute rounded-full"
+        className="absolute"
         style={{ border: `2px solid ${color}` }}
         animate={{
           width: [size * 0.4, size],
@@ -331,7 +329,6 @@ export function PulseRing({
         transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
       />
       <div
-        className="rounded-full"
         style={{
           width: size * 0.4,
           height: size * 0.4,
@@ -368,29 +365,29 @@ export function QuoteCarousel({
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.04 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
           >
             <p
-              className="text-[28px] leading-[1.3] uppercase"
+              className="text-[28px] leading-[1.25] italic"
               style={{
                 fontFamily: "var(--font-heading)",
                 color: "var(--color-text-primary)",
               }}
             >
-              "{current.text}"
+              &ldquo;{current.text}&rdquo;
             </p>
             {current.attribution && (
               <p
-                className="text-[16px] mt-3"
+                className="text-[14px] mt-3 tracking-[0.04em]"
                 style={{
                   fontFamily: "var(--font-mono)",
                   color: "var(--color-text-muted)",
                 }}
               >
-                — {current.attribution}
+                &mdash; {current.attribution}
               </p>
             )}
           </motion.div>
@@ -403,12 +400,12 @@ export function QuoteCarousel({
               key={i}
               type="button"
               onClick={() => setIndex(i)}
-              className="h-[6px] transition-all duration-300 cursor-pointer"
+              className="h-[3px] transition-all duration-200 cursor-pointer"
               style={{
                 width: i === index ? 32 : 6,
                 backgroundColor:
                   i === index
-                    ? "var(--color-text-primary)"
+                    ? "var(--color-accent)"
                     : "var(--color-border-light)",
               }}
             />
@@ -439,7 +436,7 @@ export function Tabs({
             key={i}
             type="button"
             onClick={() => setActive(i)}
-            className="px-5 py-3 text-[16px] tracking-[0.1em] uppercase cursor-pointer transition-colors duration-200"
+            className="px-5 py-3 text-[14px] tracking-[0.08em] uppercase cursor-pointer transition-colors duration-150"
             style={{
               fontFamily: "var(--font-mono)",
               color:
@@ -449,7 +446,7 @@ export function Tabs({
               backgroundColor: "transparent",
               borderBottom:
                 i === active
-                  ? "2px solid var(--color-text-primary)"
+                  ? "2px solid var(--color-accent)"
                   : "2px solid transparent",
             }}
           >
@@ -460,10 +457,10 @@ export function Tabs({
       <AnimatePresence mode="wait">
         <motion.div
           key={active}
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
           className="pt-6"
         >
           {items[active].content}
@@ -499,14 +496,14 @@ export function Tooltip({
             initial={{ opacity: 0, y: position === "top" ? 4 : -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: position === "top" ? 4 : -4 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.12 }}
             className="absolute left-1/2 -translate-x-1/2 z-50 px-3 py-2 whitespace-nowrap"
             style={{
               [position === "top" ? "bottom" : "top"]: "calc(100% + 8px)",
-              backgroundColor: "var(--color-bg-dark, #0A0A0A)",
-              color: "var(--color-text-inverse, #FFFFFF)",
+              backgroundColor: "var(--color-bg-dark, #1a0a0a)",
+              color: "var(--color-text-inverse, #faf5f0)",
               fontFamily: "var(--font-mono)",
-              fontSize: "14px",
+              fontSize: "13px",
               border: "1px solid var(--color-border-light)",
             }}
           >
