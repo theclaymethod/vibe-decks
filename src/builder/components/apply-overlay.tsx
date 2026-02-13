@@ -13,8 +13,7 @@ function SelectingOverlay({ apply }: ApplyOverlayProps) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/20 z-40" onClick={apply.cancel} />
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 z-50 flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 z-50 shadow-lg flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-sm text-neutral-600">
             {apply.selectedSlides.size} of {allFileKeys.length} selected

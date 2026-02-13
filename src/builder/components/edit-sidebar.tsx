@@ -1,10 +1,6 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import type { GenerationStatus, ChatMessage, GrabbedContext } from "../types";
-import { SlidePicker } from "./slide-picker";
 import { ChatThread } from "./chat-thread";
-import { AssetBrowser } from "./asset-browser";
 
 interface EditSidebarProps {
   selectedFileKey: string;
@@ -18,7 +14,6 @@ interface EditSidebarProps {
   width: number;
   isResizing: boolean;
   onResizeMouseDown: (e: React.MouseEvent) => void;
-  onOpenBrief?: () => void;
 }
 
 const STATUS_LABELS: Record<GenerationStatus, string> = {
@@ -29,7 +24,6 @@ const STATUS_LABELS: Record<GenerationStatus, string> = {
 };
 
 export function EditSidebar({
-  selectedFileKey,
   messages,
   status,
   onSendMessage,
@@ -40,10 +34,7 @@ export function EditSidebar({
   width,
   isResizing,
   onResizeMouseDown,
-  onOpenBrief,
 }: EditSidebarProps) {
-  const [assetBrowserOpen, setAssetBrowserOpen] = useState(false);
-
   return (
     <div
       className="border-l border-neutral-200 bg-white flex flex-col p-4 relative"
@@ -56,38 +47,6 @@ export function EditSidebar({
           isResizing ? "bg-orange-500" : "hover:bg-neutral-300"
         )}
       />
-      {selectedFileKey === "design-system" ? (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
-              Design System
-            </h3>
-            <div className="flex items-center gap-2">
-              {onOpenBrief && (
-                <button
-                  onClick={onOpenBrief}
-                  className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors"
-                >
-                  Brief
-                </button>
-              )}
-              <Link
-                to="/builder"
-                className="text-xs text-neutral-500 hover:text-neutral-800 transition-colors"
-              >
-                All Slides
-              </Link>
-            </div>
-          </div>
-          <p className="text-sm text-neutral-600">
-            Edit typography, layout, cards, and decorative components.
-          </p>
-        </div>
-      ) : (
-        <SlidePicker selectedFileKey={selectedFileKey} />
-      )}
-
-      <hr className="border-neutral-100 my-4" />
 
       <ChatThread
         messages={messages}
@@ -112,15 +71,7 @@ export function EditSidebar({
         <span className="text-xs text-neutral-500">
           {STATUS_LABELS[status]}
         </span>
-        <button
-          onClick={() => setAssetBrowserOpen(true)}
-          className="ml-auto text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
-        >
-          Assets
-        </button>
       </div>
-
-      <AssetBrowser open={assetBrowserOpen} onClose={() => setAssetBrowserOpen(false)} />
     </div>
   );
 }

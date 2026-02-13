@@ -45,6 +45,7 @@ export function Slide04Features() {
       </StaggerContainer>
 
       <StaggerContainer stagger={0.15} delay={0.3} className="flex-1 flex items-center">
+        <div style={{ "--radius-sm": "0px" } as React.CSSProperties}>
         <GridSection columns={3} gap="lg" className="w-full">
           <AnimatedEntry variant="slideUp">
             <HoverCard lift="md" shadow>
@@ -77,6 +78,7 @@ export function Slide04Features() {
             </HoverCard>
           </AnimatedEntry>
         </GridSection>
+        </div>
       </StaggerContainer>
     </SlideContainer>
   );
