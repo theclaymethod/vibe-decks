@@ -40,6 +40,13 @@ async function main(): Promise<void> {
     JSON.stringify({ deck: deckPort, builder: builderVitePort, api: builderApiPort })
   );
 
+  console.log("");
+  console.log("  \x1b[1m\x1b[36mVibe Decks\x1b[0m");
+  console.log("");
+  console.log(`  \x1b[32m➜\x1b[0m  \x1b[1mDeck:\x1b[0m    http://localhost:${deckPort}/`);
+  console.log(`  \x1b[35m➜\x1b[0m  \x1b[1mBuilder:\x1b[0m http://localhost:${builderVitePort}/`);
+  console.log("");
+
   const builderApi = spawn("tsx", ["scripts/builder-server.ts"], {
     cwd: PROJECT_ROOT,
     env: baseEnv,
