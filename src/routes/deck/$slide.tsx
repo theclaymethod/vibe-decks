@@ -6,6 +6,7 @@ import { getSlideComponent, preloadSlide, SLIDES_NAV, SLIDE_CONFIG, TOTAL_SLIDES
 export const Route = createFileRoute("/deck/$slide")({
   component: SlideRoute,
   beforeLoad: ({ params }) => {
+    if (TOTAL_SLIDES === 0) return;
     const slideNum = parseInt(params.slide, 10);
     if (isNaN(slideNum) || slideNum < 1 || slideNum > TOTAL_SLIDES) {
       throw redirect({ to: "/deck/$slide", params: { slide: "1" } });
@@ -13,7 +14,21 @@ export const Route = createFileRoute("/deck/$slide")({
   },
 });
 
+function EmptyDeckMessage() {
+  return (
+    <div className="h-screen flex items-center justify-center bg-neutral-900 text-white">
+      <p className="text-sm text-neutral-400">
+        No slides yet. Open the builder to get started.
+      </p>
+    </div>
+  );
+}
+
 function SlideRoute() {
+  if (TOTAL_SLIDES === 0) {
+    return <EmptyDeckMessage />;
+  }
+
   const { slide } = Route.useParams();
   const currentSlide = parseInt(slide, 10);
   const SlideComponent = getSlideComponent(currentSlide);

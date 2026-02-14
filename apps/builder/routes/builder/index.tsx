@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { SLIDE_CONFIG } from "@/deck/config";
+import { SLIDE_CONFIG, HAS_EXAMPLE_SLIDES } from "@/deck/config";
+import { WelcomeScreen, hasCompletedOnboarding } from "@/builder/components/welcome-screen";
+import { useClearExamples } from "@/builder/hooks/use-clear-examples";
 import { useApplyDesignSystem } from "@/builder/hooks/use-apply-design-system";
 import { useDeckChat } from "@/builder/hooks/use-deck-chat";
 import { useDeckOperations } from "@/builder/hooks/use-deck-operations";
@@ -35,9 +37,11 @@ export const Route = createFileRoute("/builder/")({
 });
 
 function BuilderIndex() {
+  const [onboarded, setOnboarded] = useState(hasCompletedOnboarding);
   const apply = useApplyDesignSystem();
   const isSelecting = apply.phase === "selecting";
   const [panelOpen, setPanelOpen] = useState(readPanelState);
+  const { clearing, clearExamples } = useClearExamples();
   const deckChat = useDeckChat();
 
   const togglePanel = useCallback(() => {
@@ -81,6 +85,10 @@ function BuilderIndex() {
     },
     [deckOps]
   );
+
+  if (!onboarded) {
+    return <WelcomeScreen onComplete={() => setOnboarded(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
@@ -131,6 +139,20 @@ function BuilderIndex() {
           </button>
         )}
 
+        {HAS_EXAMPLE_SLIDES && (
+          <button
+            onClick={() => {
+              if (confirm("Clear all example slides? This will remove all example slides so you can start fresh. This is committed to git and can be reverted.")) {
+                clearExamples();
+              }
+            }}
+            disabled={clearing}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+          >
+            {clearing ? "Clearing..." : "Clear Examples"}
+          </button>
+        )}
+
         <div className="ml-auto flex items-center gap-2">
           <GitStatusIndicator />
           <Link
@@ -159,7 +181,26 @@ function BuilderIndex() {
       <div className="flex flex-1 min-h-0">
       <div className="flex-1 min-w-0 overflow-y-auto">
         <div className="max-w-6xl mx-auto px-6 py-8">
-          {isSelecting ? (
+          {SLIDE_CONFIG.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="text-neutral-400">
+                  <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <h2 className="text-sm font-medium text-neutral-800 mb-1">No slides yet</h2>
+              <p className="text-xs text-neutral-500 mb-4 max-w-xs">
+                Create your first slide to get started.
+              </p>
+              <Link
+                to="/builder/$fileKey"
+                params={{ fileKey: "new" }}
+                className="px-4 py-2 bg-neutral-900 text-white text-xs font-medium rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                Create First Slide
+              </Link>
+            </div>
+          ) : isSelecting ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-20">
               {SLIDE_CONFIG.map((slide, i) => (
                 <div
@@ -184,9 +225,16 @@ function BuilderIndex() {
                       <p className="text-sm font-medium text-neutral-800 truncate">
                         {slide.title}
                       </p>
-                      <p className="text-xs text-neutral-400 mt-0.5">
-                        {slide.fileKey}.tsx
-                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <p className="text-xs text-neutral-400">
+                          {slide.fileKey}.tsx
+                        </p>
+                        {slide.isExample && (
+                          <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
+                            Example
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

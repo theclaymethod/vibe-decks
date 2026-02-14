@@ -974,6 +974,142 @@ const server = createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "POST" && req.url === "/api/clear-examples") {
+    log("clear-examples", "request received");
+    try {
+      const slidesDir = resolve(PROJECT_ROOT, "src/deck/slides");
+      const files = readdirSync(slidesDir).filter((f) => f.endsWith(".tsx"));
+      for (const file of files) {
+        unlinkSync(resolve(slidesDir, file));
+      }
+      log("clear-examples", `deleted ${files.length} slide files`);
+
+      const configPath = resolve(PROJECT_ROOT, "src/deck/config.ts");
+      const emptyConfig = [
+        'import { type ComponentType, lazy } from "react";',
+        "",
+        "export interface SlideConfig {",
+        "  id: string;",
+        "  title: string;",
+        "  shortTitle: string;",
+        "  fileKey: string;",
+        "  isExample?: boolean;",
+        "}",
+        "",
+        "const slideLoaders: Record<string, () => Promise<{ default: ComponentType }>> = {};",
+        "",
+        "const loadedComponentCache = new Map<string, ComponentType>();",
+        "const loadingPromiseCache = new Map<string, Promise<{ default: ComponentType }>>();",
+        "const lazyComponentCache = new Map<string, ComponentType>();",
+        "",
+        "function startLoading(fileKey: string): Promise<{ default: ComponentType }> {",
+        "  const existing = loadingPromiseCache.get(fileKey);",
+        "  if (existing) return existing;",
+        "",
+        "  const loader = slideLoaders[fileKey];",
+        "  if (!loader) {",
+        "    const resolved = Promise.resolve({",
+        "      default: (() => null) as ComponentType,",
+        "    });",
+        '    loadedComponentCache.set(fileKey, () => null);',
+        "    return resolved;",
+        "  }",
+        "",
+        "  const promise = loader().then((result) => {",
+        "    loadedComponentCache.set(fileKey, result.default);",
+        "    return result;",
+        "  });",
+        "",
+        "  loadingPromiseCache.set(fileKey, promise);",
+        "  return promise;",
+        "}",
+        "",
+        "function getComponent(fileKey: string): ComponentType {",
+        "  const loaded = loadedComponentCache.get(fileKey);",
+        "  if (loaded) return loaded;",
+        "",
+        "  const cachedLazy = lazyComponentCache.get(fileKey);",
+        "  if (cachedLazy) return cachedLazy;",
+        "",
+        "  const LazyComponent = lazy(() => startLoading(fileKey));",
+        "  lazyComponentCache.set(fileKey, LazyComponent);",
+        "  return LazyComponent;",
+        "}",
+        "",
+        "const SLIDE_CONFIG_INTERNAL: SlideConfig[] = [];",
+        "",
+        "export const SLIDE_CONFIG: SlideConfig[] = SLIDE_CONFIG_INTERNAL;",
+        "",
+        "export const TOTAL_SLIDES = SLIDE_CONFIG.length;",
+        "",
+        "export const HAS_EXAMPLE_SLIDES = SLIDE_CONFIG.some((s) => s.isExample);",
+        "",
+        "export function preloadSlide(slideNumber: number): void {",
+        "  const index = slideNumber - 1;",
+        "  if (index >= 0 && index < SLIDE_CONFIG_INTERNAL.length) {",
+        "    const fileKey = SLIDE_CONFIG_INTERNAL[index].fileKey;",
+        "    startLoading(fileKey);",
+        "  }",
+        "}",
+        "",
+        "export function getSlideComponent(slideNumber: number): ComponentType {",
+        "  const index = slideNumber - 1;",
+        "  if (index >= 0 && index < SLIDE_CONFIG_INTERNAL.length) {",
+        "    return getComponent(SLIDE_CONFIG_INTERNAL[index].fileKey);",
+        "  }",
+        "  return (() => null) as ComponentType;",
+        "}",
+        "",
+        "export function getSlideConfig(slideNumber: number): SlideConfig | undefined {",
+        "  return SLIDE_CONFIG[slideNumber - 1];",
+        "}",
+        "",
+        "export function loadSlideComponent(fileKey: string): Promise<ComponentType> {",
+        "  return startLoading(fileKey).then((m) => m.default);",
+        "}",
+        "",
+        "export function invalidateSlideCache(fileKey: string): void {",
+        '  loadedComponentCache.delete(fileKey);',
+        '  loadingPromiseCache.delete(fileKey);',
+        '  lazyComponentCache.delete(fileKey);',
+        "}",
+        "",
+        "export const SLIDES_NAV = SLIDE_CONFIG.map((slide, index) => ({",
+        "  number: index + 1,",
+        "  title: slide.title,",
+        "  shortTitle: slide.shortTitle,",
+        "}));",
+        "",
+      ].join("\n");
+      writeFileSync(configPath, emptyConfig);
+      log("clear-examples", "wrote empty config.ts");
+
+      try {
+        execSync("git add src/deck/slides src/deck/config.ts", {
+          cwd: PROJECT_ROOT,
+          encoding: "utf-8",
+          timeout: 5_000,
+        });
+        execSync('git commit -m "Clear example slides to start fresh"', {
+          cwd: PROJECT_ROOT,
+          encoding: "utf-8",
+          timeout: 10_000,
+        });
+        log("clear-examples", "committed changes");
+      } catch (gitErr) {
+        log("clear-examples", `git commit failed: ${gitErr}`);
+      }
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, deleted: files.length }));
+    } catch (err) {
+      log("clear-examples", `error: ${err}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }));
+    }
+    return;
+  }
+
   log("404", `${req.method} ${req.url}`);
   res.writeHead(404, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ error: "Not found" }));

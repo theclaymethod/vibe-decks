@@ -1,206 +1,201 @@
-# Research: Builder / Deck Separation
+# Research: Example Slides vs User Slides & Onboarding
 
 ## Overview
 
-Vibe Decks is a slide deck builder + presentation system. Currently it's a single TanStack Router app where both the builder UI and the deck presentation share the same Vite build, route tree, and deploy target. The builder server (Claude CLI proxy) already runs as a separate Node.js process, but the React frontend is monolithic.
+pls-fix is a slide deck template system where users create presentations via an AI-powered builder UI and Claude Code CLI skills. The system has a design system (63 components), 21 templates, and 18 pre-made slides that serve as examples. There is currently **no distinction between example slides and user slides**, and **no onboarding flow** for new users starting a deck from scratch.
 
 ## Architecture
-
-### Current Process Model
-
-`pnpm dev` (`scripts/dev.ts`) spawns two processes:
-1. **Vite dev server** — serves the entire React app (both builder + deck routes)
-2. **Builder server** (`scripts/builder-server.ts`) — Node.js HTTP server on a separate port
-
-Vite proxies `/api/*` to the builder server via config:
-```ts
-// vite.config.ts
-proxy: process.env.BUILDER_PORT
-  ? { "/api": { target: `http://localhost:${process.env.BUILDER_PORT}` } }
-  : undefined,
-```
 
 ### Key Files
 
 | File | Purpose |
 |------|---------|
-| `vite.config.ts` | Single Vite config for entire app. Uses cloudflare plugin, tanstackStart, React |
-| `wrangler.jsonc` | Cloudflare Workers deploy. Entry: `src/entry.ts` |
-| `src/entry.ts` | TanStack Start server entry (just re-exports) |
-| `deck.config.ts` | Top-level config: title, auth, dimensions, fonts |
-| `scripts/dev.ts` | Dev orchestrator: finds ports, spawns Vite + builder server, writes `.dev-ports` |
-| `scripts/builder-server.ts` | Node.js HTTP API for Claude CLI, git, assets (~980 lines) |
-| `src/routes/__root.tsx` | Root layout: HTML shell, CSS/fonts, uses `deckConfig` |
-| `src/routes/index.tsx` | `/` redirects to `/deck/1` |
-| `tsconfig.json` | Single tsconfig, `@/*` maps to `./src/*` |
-| `package.json` | Single package, all deps combined |
+| `src/deck/config.ts` | Slide registry: lazy loaders, config array, cache management |
+| `src/deck/theme.css` | CSS custom properties for colors, fonts, spacing, 3 modes (white/dark/yellow) |
+| `src/deck/slides/*.tsx` | 18 individual slide files (all example content) |
+| `deck.config.ts` | Top-level config: title ("My Presentation"), auth, dimensions, fonts |
+| `apps/builder/routes/index.tsx` | Root redirect to `/builder` |
+| `apps/builder/routes/builder/index.tsx` | Grid overview of all slides (header bar + sortable grid) |
+| `apps/builder/routes/builder/$fileKey.tsx` | Single slide editor (create or edit) |
+| `apps/builder/routes/builder/designer.tsx` | Design system preview + chat editing |
+| `apps/builder/routes/builder/create-design-system.tsx` | Design system creation wizard |
+| `src/builder/components/design-system-wizard.tsx` | 7-step wizard UI (references -> palette -> typography -> personality -> plan -> execute -> complete) |
+| `src/builder/components/builder-layout.tsx` | Routes between CreateView (canvas + prompt, when fileKey="new") and EditView (preview + chat) |
+| `src/design-system/showcase.tsx` | Brand bible / design system showcase component (~1155 lines, 14 sections) |
+| `src/templates/index.ts` | 21 template exports (FeatureGrid, StatCards, Timeline, etc.) |
+| `scripts/dev.ts` | Starts deck + builder + API on dynamic ports, writes `.dev-ports` |
+| `scripts/builder-server.ts` | Claude Code proxy API for all builder operations |
+| `.claude/skills/add-slide/SKILL.md` | Skill for creating new slides (from design system primitives) |
+| `.claude/skills/create-design-system/SKILL.md` | Skill for generating design system from intent |
 
-### Route Structure
+### Key Abstractions
 
-| Route | File | Purpose |
-|-------|------|---------|
-| `/` | `src/routes/index.tsx` | Redirect to `/deck/1` |
-| `/deck/` | `src/routes/deck/index.tsx` | Redirect to `/deck/1` |
-| `/deck/$slide` | `src/routes/deck/$slide.tsx` | Presentation view (1-indexed) |
-| `/builder/` | `src/routes/builder/index.tsx` | Slide grid + deck management |
-| `/builder/$fileKey` | `src/routes/builder/$fileKey.tsx` | Edit/create single slide |
-| `/builder/designer` | `src/routes/builder/designer.tsx` | Design system editor |
-| `/builder/create-design-system` | `src/routes/builder/create-design-system.tsx` | Design system wizard |
+**Slide Registry** (`src/deck/config.ts`): Three-tier lazy loading with `slideLoaders` (dynamic imports), `SLIDE_CONFIG_INTERNAL` (metadata array), and component caches. The `SlideConfig` interface has `id`, `title`, `shortTitle`, `fileKey` — no "isExample" or category flag.
 
-### Module Map
+**Design System Wizard** (`design-system-wizard.tsx`): A standalone 7-step wizard at `/builder/create-design-system`. Steps: references (images + URLs), palette (presets + AI generation), typography (4 presets + custom fonts), personality (4 options), plan (AI-generated review), execute (generates files), complete (links to designer). Fully functional and mature.
 
-```
-src/
-├── routes/          # TanStack file-based routes (auto-generates routeTree.gen.ts)
-│   ├── __root.tsx   # SHARED — HTML shell, loads theme
-│   ├── index.tsx    # DECK — redirect
-│   ├── deck/        # DECK-ONLY routes
-│   └── builder/     # BUILDER-ONLY routes
-├── core/            # DECK RUNTIME — presentation infrastructure
-│   ├── deck-layout.tsx    # Wraps slides: nav + scaler + auth + mobile check
-│   ├── slide-scaler.tsx   # CSS transform scaling to fit viewport
-│   ├── slide-nav.tsx      # Left sidebar navigation
-│   ├── keyboard-nav.ts    # Arrow/space/number key handling
-│   ├── auth-gate.tsx      # Password protection
-│   ├── mobile-blocker.tsx # Blocks mobile devices
-│   └── index.ts           # Barrel exports
-├── deck/            # SHARED — slide content
-│   ├── config.ts          # Slide registry, lazy loading, SLIDE_CONFIG
-│   ├── slides/*.tsx        # 18 slide component files
-│   ├── theme.css           # CSS custom properties
-│   └── custom-fonts.css    # Auto-generated @font-face rules
-├── templates/       # SHARED — 21 reusable slide templates
-├── design-system/   # SHARED — base UI primitives (typography, cards, etc.)
-├── builder/         # BUILDER-ONLY — all builder UI
-│   ├── components/        # 20+ components (canvas, chat, previews, etc.)
-│   ├── hooks/             # 12 hooks (generation, editing, thumbnails, etc.)
-│   ├── types.ts
-│   ├── prompt-builder.ts
-│   └── canvas-capture.ts
-├── lib/
-│   └── utils.ts     # SHARED — cn() utility
-├── app.css          # SHARED — tailwind + theme imports
-└── entry.ts         # SSR entry for Cloudflare Workers
-```
+**Builder Index** (`apps/builder/routes/builder/index.tsx`): Header bar with "Manage Deck", "Design System", "Apply Design System", "New Design System", "New Slide" buttons. Below: sortable grid of all slides or design-system-apply selection mode. Deck chat panel toggleable. No empty state or welcome screen.
+
+**Builder Layout** (`builder-layout.tsx`): When `fileKey === "new"` renders `CreateView` (Konva canvas wireframe tool + prompt panel + generation panel). Otherwise renders `EditView` (live slide preview + chat sidebar with session persistence).
 
 ### Data Flow
 
-**Deck Presentation:**
-```
-URL /deck/3 → $slide route → parseInt(3) → getSlideComponent(3)
-→ SLIDE_CONFIG[2].fileKey → "03-intro"
-→ lazy(() => import("./slides/03-intro")) → React.Suspense
-→ DeckLayout wraps: SlideNav + SlideScaler + slide content
-→ keyboard-nav listens for arrow keys → navigate to /deck/N
-```
+**First-time user experience (current):**
+1. `pnpm dev` starts 3 processes, prints deck + builder URLs
+2. Open builder URL -> `apps/builder/routes/index.tsx` redirects to `/builder`
+3. `/builder` renders `BuilderIndex` -> sees 18 pre-made slides in a grid
+4. No guidance on what to do. User must figure out the workflow themselves.
 
-**Builder Edit Flow:**
-```
-URL /builder/03-intro → $fileKey route → BuilderLayout
-→ EditView: resolveEditInfo("03-intro") finds slide in SLIDE_CONFIG
-→ Left: SlidePreview renders actual slide component via useSlidePreview
-→ Right: EditSidebar with chat → user types message
-→ handleSendMessage → generation.edit() → fetch POST /api/edit
-→ Vite proxy → builder-server → spawns `claude -p "..." --dangerously-skip-permissions`
-→ SSE stream back → updates chat messages
-→ Vite HMR picks up file changes from Claude's edits
-```
+**Slide editing flow:**
+1. Click any slide in grid -> `/builder/{fileKey}` -> `EditView`
+2. Left: live slide preview rendered via `SlidePreview` + `SlideScaler`
+3. Right: chat sidebar with `EditSidebar` -> user types instructions
+4. POST `/api/edit` -> builder-server spawns `claude -p "..." --dangerously-skip-permissions`
+5. Claude edits slide file -> Vite HMR updates preview live
 
-**Thumbnail Generation (builder only):**
-```
-ThumbnailProvider mounts hidden div off-screen
-→ For each slide in SLIDE_CONFIG:
-  → loadSlideComponent(fileKey) → dynamically imports slide
-  → createRoot() → flushSync render into hidden container
-  → toPng() via html-to-image at 0.5x → cache as data URL
-→ SlideThumb components read from cache
-```
+**Design system creation flow:**
+1. Click "New Design System" -> `/builder/create-design-system`
+2. Step through 7-step wizard (references, palette, typography, personality)
+3. "Generate Plan" -> POST `/api/create-design-system` with `planOnly: true`
+4. Review plan -> "Generate Design System" -> POST with `planOnly: false`
+5. Completes -> links to designer view and slide grid
 
 ## Existing Patterns
 
-### How Builder Previews Slides
-The builder renders slides **inline** (same React tree, not iframes):
-- `SlidePreview` component in `src/builder/components/slide-preview.tsx`
-- Uses `SlideScaler` from `@/core` to scale 1920x1080 slides to fit
-- Components are loaded via `loadSlideComponent()` from `@/deck/config`
-- HMR works because Vite watches the same source files
+### Current Slide Content
 
-### API Boundary
-The builder server exposes these endpoints (all dev-only, proxied via Vite):
-- `POST /api/generate` — create new slide via Claude
-- `POST /api/edit` — edit existing slide via Claude (supports session resume)
-- `POST /api/edit-design-system` — edit design system via Claude
-- `POST /api/apply-design-system` — rewrite slide with design system primitives
-- `POST /api/create-design-system` — generate new design system
-- `POST /api/assess-design-system` — evaluate design system alignment
-- `POST /api/generate-palette` — generate color palette
-- `POST /api/deck-chat` — deck management chat (reorder, delete, etc.)
-- `GET/POST/DELETE /api/assets/*` — asset CRUD
-- `GET /api/design-brief` — read design brief
-- `GET /api/git/status`, `POST /api/git/push`, `POST /api/git/revert` — git ops
+All 18 slides contain realistic-looking example content. None are blank templates:
 
-### Cross-Boundary Dependencies
+| Slide | Content Description |
+|-------|-------------------|
+| `01-title` | "Project Name", "Product Overview", "Your Name", "January 2024" |
+| `02-problem` | Before/after comparison with placeholder lists |
+| `03-intro` | Two-column with Unsplash image, "Solving real problems..." |
+| `04-features` | 3 feature cards: Easy Integration, Real-time Analytics, Enterprise Security |
+| `05-stats` | 3 stat cards: 10K+ Users, 98% Satisfaction, 2.5x ROI |
+| `06-timeline` | 4 phases: Discovery, Design, Development, Launch |
+| `07-comparison` | Standard vs Premium feature matrix |
+| `08-quote` | 2 testimonial panels with background images |
+| `09-closing` | SF map with score markers + "200%" big number |
+| `10-fullscreen` | Full-bleed Unsplash image with text overlay |
+| `11-gallery` | 6 portfolio items with hover captions |
+| `12-mobile` | iPhone mockup with custom map UI |
+| `13-browser` | Browser frame with dashboard screenshot |
+| `14-team` | 4 team members with names + headshots |
+| `15-partners` | 6 tech stack cards (React, TypeScript, Tailwind, etc.) |
+| `16-process` | 3 process cards: Discovery, Design, Build |
+| `17-showcase` | 3 project case studies |
+| `18-text-4` | Ada Lovelace bio in accent cards |
 
-**Builder → Deck** (heavy):
-- `@/deck/config` — SLIDE_CONFIG, TOTAL_SLIDES, loadSlideComponent, getSlideComponent, invalidateSlideCache
-- `@/core` — SlideScaler (for preview), possibly other core components
-- `@/templates` — template listing for prompt generation
-- `@/design-system` — design system showcase
-- `deck.config.ts` — dimensions for thumbnail capture
+### Slide Composition Patterns
 
-**Deck → Builder** (minimal, dev-only):
-- `src/routes/deck/$slide.tsx` has a `{import.meta.env.DEV && ...}` block that renders a `<Link to="/builder/$fileKey">` Edit button
-- This is the ONLY dependency from deck code to builder code
-- It's already gated behind `import.meta.env.DEV`
+**Pattern A: Template-based** (minority — some slides use templates from `@/templates`):
+```tsx
+import { StatCardsTemplate } from "@/templates";
+export function Slide05Stats() {
+  return <StatCardsTemplate mode="dark" stats={[...]} />;
+}
+```
 
-### Framework Details
-- **TanStack Start** with `@tanstack/react-start` — SSR framework
-- **TanStack Router** with file-based routing — auto-generates `routeTree.gen.ts`
-- **Cloudflare Workers** as deploy target via `@cloudflare/vite-plugin`
-- **Tailwind CSS v4** via `@tailwindcss/vite`
-- **Motion** (framer-motion successor) for animations
-- **Konva** + **react-konva** for canvas-based wireframe tool in builder
-- **maplibre-gl** for map rendering in slides
-- **html-to-image** for thumbnail capture
+**Pattern B: Design-system-composed** (majority — compose directly from `@/design-system`):
+```tsx
+import { SlideContainer, Eyebrow, HeroTitle, ... } from "@/design-system";
+export function Slide01Title() {
+  return (
+    <SlideContainer mode="yellow">
+      {/* Free composition from primitives */}
+    </SlideContainer>
+  );
+}
+```
+
+The add-slide skill explicitly prefers Pattern B: "Build from the design system, not from templates. Templates exist as reference examples."
+
+### Naming Convention
+
+Strict, enforced throughout codebase:
+- Filename: `NN-kebab-case.tsx` (e.g., `05-stats.tsx`)
+- Export: `SlideNNCamelCase` (e.g., `Slide05Stats`)
+- FileKey: `NN-kebab-case` (URL param and config key)
+- Config ID: `kebab-case` (no number prefix)
+- Slide number: 1-indexed, zero-padded
+
+### Registration
+
+Every slide needs entries in two places within `config.ts`:
+1. `slideLoaders` record: `"NN-name": () => import("./slides/NN-name").then(m => ({default: m.SlideNNCamelCase}))`
+2. `SLIDE_CONFIG_INTERNAL` array: `{ id: "name", fileKey: "NN-name", title: "...", shortTitle: "..." }`
+
+### Builder Header Bar Structure
+
+The `/builder` index page header contains (left to right):
+- "Slides" label + count badge
+- "Manage Deck" toggle (opens deck chat panel for reorder/delete)
+- "Design System" link (-> `/builder/designer`)
+- "Apply Design System" button (enters selection mode)
+- *(spacer)*
+- Git status indicator
+- "New Design System" link (-> `/builder/create-design-system`)
+- "New Slide" button (-> `/builder/new`)
 
 ## Edge Cases & Invariants
 
-### The Root Layout Problem
-`__root.tsx` loads `deckConfig` for title and Google Fonts URL. Both builder and deck need this. If separated, each app needs its own root layout that loads the same theme/fonts.
+### No Empty State Handling
 
-### HMR-Driven Workflow
-The builder's core value proposition is: Claude edits slide files → Vite HMR updates the preview instantly. For this to work, the builder's Vite instance must be watching the same `src/deck/slides/` directory. If the builder is a separate Vite app, it needs to import from the same source files.
+`BuilderIndex` directly renders `SLIDE_CONFIG.map(...)`. If config were empty, it'd show an empty grid with header buttons but no content, no guidance. `TOTAL_SLIDES` would be 0, and CreateView's default `slidePosition` would be 1.
 
-### Thumbnail Capture Imports All Slides
-`use-thumbnail-cache.tsx` imports `loadSlideComponent` which can load ANY slide. This means the builder needs access to the full slide registry and all slide source files.
+### Slide Deletion Cascading
 
-### Production Build Size
-Currently, builder code IS bundled into the production Cloudflare Workers deploy. Since all routes are in one app, the builder routes and their dependencies (Konva, dnd-kit, etc.) ship to production even though they're only used in dev. This is the main motivation for separation — keeping the deployed deck lean.
+Removing slides triggers renumbering of all subsequent slides (file renames, config updates, export renames). Clearing all 18 example slides would be extremely tedious.
 
-### The Builder Server is Already Isolated
-`scripts/builder-server.ts` is pure Node.js, no React, no Vite. It communicates via HTTP. This piece needs zero changes for separation — it stays as-is.
+### Templates Not Exposed in Builder UI
+
+The 21 templates are importable in code but never shown to users in the builder. There's no "pick a template" step in any flow. The CreateView has a canvas wireframe tool + text prompts — not template selection.
+
+### Design System Wizard is Disconnected
+
+The wizard lives at `/builder/create-design-system` as a standalone route. After completion it links to `/builder/designer` (showcase preview) or `/builder` (slide grid). It's not connected to any slide creation flow or onboarding sequence.
+
+### deck.config.ts Has Default Values
+
+```typescript
+title: "My Presentation",
+subtitle: "A pls-fix Template",
+auth: { enabled: false, password: "secret123" },
+```
+
+No onboarding step prompts the user to customize these.
 
 ## Findings
 
-### What Ships to Production That Shouldn't
-Looking at `package.json`, these are builder-only dependencies that currently ship:
-- `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` — drag-and-drop for slide reordering
-- `konva`, `react-konva` — wireframe canvas
-- `html-to-image` — thumbnail generation
-- `react-grab` — element grabbing in preview
+### Finding 1: Zero Differentiation Between Example and User Slides
 
-These add significant bundle weight. The entire `src/builder/` directory (~40 files) also gets bundled.
+The `SlideConfig` interface has no mechanism to flag a slide as "example" vs "user-created". All 18 slides are structurally identical in the registry. There's no way to:
+- Filter or hide example slides
+- Bulk-remove examples to start fresh
+- Reset back to examples
+- Visually distinguish them in the grid
 
-### Monorepo vs. Two Apps vs. Conditional Loading
+### Finding 2: No Onboarding Exists
 
-Three main approaches to separation:
+A new user opening the builder for the first time sees 18 slides and must figure out the workflow independently. The intended user journey (from README context) seems to be:
+1. Create a design system (colors, typography, personality)
+2. Apply it to slides or create new ones
+3. Edit slides via chat
 
-1. **Monorepo with shared packages** — pnpm workspaces, `packages/shared`, `apps/deck`, `apps/builder`
-2. **Two Vite configs, one repo** — `vite.config.deck.ts` and `vite.config.builder.ts`, same source tree
-3. **Route-level code splitting** — keep one app but ensure builder routes/deps are tree-shaken from production build
+But none of this is presented as a guided flow.
 
-### Current Dev-Only Gating
-The Edit button in `$slide.tsx` already uses `import.meta.env.DEV`. However, route files in `src/routes/builder/` are always included in the route tree regardless of environment — TanStack Router's file-based routing doesn't support conditional routes.
+### Finding 3: The Design System Wizard is the Closest Thing to Onboarding
 
-### Deployment Concern
-The wrangler config points to `src/entry.ts` which re-exports TanStack Start's server entry. Both apps would need their own entry points and wrangler configs (or the builder simply doesn't deploy to Cloudflare at all — it's dev-only).
+The wizard at `/builder/create-design-system` already has a polished multi-step flow with presets, AI generation, plan review, and execution. It's the natural first step but isn't presented as such.
+
+### Finding 4: No "Start Fresh" Mechanism
+
+There's no button or flow to clear example slides and start with an empty deck. The renumbering cascade makes manual deletion painful. A "clear all and start fresh" action would need to:
+1. Delete all files in `src/deck/slides/`
+2. Clear `slideLoaders` and `SLIDE_CONFIG_INTERNAL` in `config.ts`
+3. Reset `deck.config.ts` to defaults
+
+### Finding 5: Template Catalog Could Power Slide Creation
+
+The 21 templates cover common presentation patterns (title, hero, stats, quote, timeline, comparison, etc.). If exposed as a browsable catalog during onboarding, users could select template types and fill in their content — a much more guided experience than the current canvas wireframe tool.

@@ -1,8 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { HAS_EXAMPLE_SLIDES } from "@/deck/config";
 import { useGeneration } from "../hooks/use-generation";
 import { useAssets } from "../hooks/use-assets";
+import { useClearExamples } from "../hooks/use-clear-examples";
 import { AssistantContent } from "./assistant-content";
 import { GitStatusIndicator } from "./git-status-indicator";
 
@@ -40,6 +42,7 @@ const PERSONALITY_OPTIONS = [
 export function DesignSystemWizard() {
   const navigate = useNavigate();
   const generation = useGeneration();
+  const { clearing, clearExamples } = useClearExamples();
   const [step, setStep] = useState<WizardStep>("references");
 
   const inspiration = useAssets("inspiration");
@@ -809,16 +812,34 @@ export function DesignSystemWizard() {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => navigate({ to: "/builder/designer" })}
-                className="px-6 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors"
-              >
-                Open Designer
-              </button>
-              <button
-                onClick={() => navigate({ to: "/builder" })}
                 className="px-6 py-2.5 border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50 transition-colors"
               >
-                Back to Slides
+                Preview Design System
               </button>
+              {HAS_EXAMPLE_SLIDES ? (
+                <>
+                  <button
+                    onClick={() => clearExamples()}
+                    disabled={clearing}
+                    className="px-6 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                  >
+                    {clearing ? "Clearing..." : "Start Fresh"}
+                  </button>
+                  <button
+                    onClick={() => navigate({ to: "/builder" })}
+                    className="px-6 py-2.5 border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50 transition-colors"
+                  >
+                    Keep Examples
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate({ to: "/builder" })}
+                  className="px-6 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors"
+                >
+                  Start Adding Slides
+                </button>
+              )}
             </div>
           </div>
         )}

@@ -1,616 +1,434 @@
-# Plan: Separate Builder from Deck
+# Plan: Example Slide Differentiation & User Onboarding
 
 ## Goal
 
-Split the monolithic Vite app into two independent apps — the **deck** (deployed presentation) and the **builder** (dev-only editing tool) — so the production build ships zero builder code while both apps share the same slide source for live preview.
+Distinguish pre-made example slides from user-created slides, and add an onboarding flow that guides new users through design system creation and deck setup before they encounter the raw slide grid.
 
 ## Approach
 
-- **Deck** stays as the TanStack Start app (SSR, Cloudflare Workers) at project root. Builder routes are removed; route tree regenerates with only deck routes.
-- **Builder** becomes a standalone Vite SPA (TanStack Router, client-side only) in `apps/builder/`. No SSR, no Cloudflare — it's a dev tool.
-- **Shared source** (`src/deck/`, `src/core/`, `src/templates/`, `src/design-system/`, `src/builder/`, `src/lib/`) stays at `src/`. Both apps import via the `@/` path alias.
-- **Dev script** starts three processes: deck Vite, builder Vite, builder API server.
-- **Production build** (`pnpm build`) only touches the deck. Builder code is not bundled.
+**Core insight**: The 18 shipped slides are examples, not the user's deck. Today, there's no distinction. We add an `isExample` flag to `SlideConfig`, gate first-time users through a welcome screen, connect the existing design system wizard to onboarding, and provide a "clear examples + start fresh" mechanism.
 
-### Why the builder is a plain SPA (not TanStack Start)
+**State management**: Use localStorage for onboarding state (consistent with existing `deck-panel-open` pattern in `apps/builder/routes/builder/index.tsx:17-31`). Use config metadata for slide type (`isExample`). Use a new builder-server endpoint for bulk clearing.
 
-The builder doesn't need SSR — it's a local dev tool that will never be deployed. Using plain TanStack Router (without Start) means:
-- No server entry point, no Cloudflare plugin
-- Simpler `index.html` → `main.tsx` → `RouterProvider` bootstrap
-- The `@tanstack/router-plugin/vite` handles file-based routing identically
-
-### How live preview works across two Vite apps
-
-Both Vite instances watch the same `src/deck/slides/` directory. When Claude edits a slide file:
-1. The deck's Vite detects the change → HMR in the deck preview
-2. The builder's Vite also detects the change → HMR in the builder preview
-
-The builder's `useSlidePreview` hook uses `import.meta.hot.on("vite:afterUpdate", ...)` which fires on the builder's own Vite HMR channel. Since both Vite instances watch the same source files, HMR works independently in each.
-
-## Directory Structure After
-
-```
-vibe-decks/
-├── src/                              # SHARED source (both apps import from here)
-│   ├── deck/                         # Slide content, config, theme
-│   ├── core/                         # Presentation runtime (scaler, nav, auth)
-│   ├── templates/                    # 21 slide templates
-│   ├── design-system/                # UI primitives
-│   ├── builder/                      # Builder components + hooks
-│   ├── lib/                          # Utilities (cn)
-│   ├── app.css                       # Tailwind + theme imports
-│   ├── routes/                       # DECK routes only
-│   │   ├── __root.tsx
-│   │   ├── index.tsx
-│   │   └── deck/
-│   │       ├── index.tsx
-│   │       └── $slide.tsx
-│   ├── router.tsx                    # Deck router (unchanged)
-│   ├── routeTree.gen.ts              # Deck route tree (auto-regenerated)
-│   └── entry.ts                      # Deck SSR entry (unchanged)
-├── apps/
-│   └── builder/                      # BUILDER app (dev-only SPA)
-│       ├── index.html                # SPA entry
-│       ├── main.tsx                  # React bootstrap
-│       ├── router.tsx                # Builder router
-│       ├── routeTree.gen.ts          # Builder route tree (auto-generated)
-│       ├── vite.config.ts            # Builder Vite config
-│       ├── tsconfig.json             # Extends root, overrides @/ alias
-│       └── routes/                   # Builder routes
-│           ├── __root.tsx
-│           ├── index.tsx
-│           └── builder/
-│               ├── index.tsx
-│               ├── $fileKey.tsx
-│               ├── designer.tsx
-│               └── create-design-system.tsx
-├── scripts/
-│   ├── dev.ts                        # Starts deck + builder + API server
-│   └── builder-server.ts             # Claude proxy (unchanged)
-├── vite.config.ts                    # Deck Vite config (simplified)
-├── wrangler.jsonc                    # Deploys deck only (unchanged)
-├── deck.config.ts                    # Shared config (unchanged)
-├── tsconfig.json                     # Root tsconfig (unchanged)
-└── package.json                      # Updated scripts
-```
+**New user flow**:
+1. Open builder → welcome screen (not the grid)
+2. Welcome offers: "Create Your Design System" or "Explore Example Deck"
+3. "Create Design System" → existing wizard → new completion step offers "Start Fresh" or "Apply to Examples"
+4. "Start Fresh" → clears all example slides → empty state with "Create your first slide"
+5. "Explore Example Deck" → grid with example badges, header "Clear Examples" button
 
 ## Changes
 
-### 1. Create builder app shell
+### 1. SlideConfig: Add `isExample` flag
 
-#### `apps/builder/index.html` — SPA entry point
+**File:** `src/deck/config.ts`
 
-**New file.**
+Add optional `isExample` property. All 18 existing slides get `isExample: true`. New slides created by skills/builder default to `undefined` (falsy).
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Vibe Decks Builder</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./main.tsx"></script>
-  </body>
-</html>
-```
-
-#### `apps/builder/main.tsx` — React bootstrap
-
-**New file.** Loads shared CSS, Google Fonts (from `deckConfig`), and mounts the router.
-
-```tsx
-import "@/app.css";
-import { StrictMode, useEffect } from "react";
-import { createRoot } from "react-dom/client";
-import { RouterProvider } from "@tanstack/react-router";
-import { deckConfig } from "../../deck.config";
-import { getRouter } from "./router";
-
-function loadGoogleFonts() {
-  if (document.querySelector('link[data-builder-fonts]')) return;
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = deckConfig.theme.googleFontsUrl;
-  link.dataset.builderFonts = "";
-  document.head.appendChild(link);
+```typescript
+// Before (line 3-8)
+export interface SlideConfig {
+  id: string;
+  title: string;
+  shortTitle: string;
+  fileKey: string;
 }
 
-const router = getRouter();
-
-function App() {
-  useEffect(loadGoogleFonts, []);
-  return <RouterProvider router={router} />;
-}
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
-```
-
-#### `apps/builder/router.tsx` — TanStack Router (client-only)
-
-**New file.** Same pattern as deck's `src/router.tsx` but uses the builder's route tree.
-
-```tsx
-import { createRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
-
-export const getRouter = () => {
-  const router = createRouter({
-    routeTree,
-    scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
-  });
-  return router;
-};
-```
-
-#### `apps/builder/vite.config.ts` — Builder Vite config
-
-**New file.** Key differences from deck config: no Cloudflare plugin, no TanStack Start, uses `@tanstack/router-plugin/vite` directly.
-
-```ts
-import { defineConfig } from "vite";
-import viteReact from "@vitejs/plugin-react";
-import viteTsConfigPaths from "vite-tsconfig-paths";
-import tailwindcss from "@tailwindcss/vite";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
-import { resolve } from "path";
-
-const SHARED_SRC = resolve(__dirname, "../../src");
-const BUILDER_PORT = Number(process.env.BUILDER_PORT) || 3333;
-
-export default defineConfig({
-  root: __dirname,
-  publicDir: resolve(__dirname, "../../public"),
-  plugins: [
-    TanStackRouterVite({
-      routesDirectory: resolve(__dirname, "routes"),
-      generatedRouteTree: resolve(__dirname, "routeTree.gen.ts"),
-    }),
-    viteTsConfigPaths({
-      projects: [resolve(__dirname, "tsconfig.json")],
-    }),
-    tailwindcss(),
-    viteReact(),
-  ],
-  resolve: {
-    alias: {
-      "@/": SHARED_SRC + "/",
-    },
-  },
-  server: {
-    watch: {
-      ignored: ["**/routeTree.gen.ts"],
-    },
-    proxy: {
-      "/api": {
-        target: `http://localhost:${BUILDER_PORT}`,
-        changeOrigin: true,
-      },
-    },
-  },
-  build: {
-    outDir: resolve(__dirname, "dist"),
-    minify: "esbuild",
-    target: "esnext",
-  },
-});
-```
-
-#### `apps/builder/tsconfig.json` — Extends root, overrides path alias
-
-**New file.**
-
-```json
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["../../src/*"]
-    }
-  },
-  "include": [
-    "./**/*.ts",
-    "./**/*.tsx",
-    "../../src/**/*.ts",
-    "../../src/**/*.tsx",
-    "../../deck.config.ts"
-  ]
+// After
+export interface SlideConfig {
+  id: string;
+  title: string;
+  shortTitle: string;
+  fileKey: string;
+  isExample?: boolean;
 }
 ```
 
-#### `apps/builder/routes/__root.tsx` — Builder root layout
+Each entry in `SLIDE_CONFIG_INTERNAL` (lines 102-121) gains `isExample: true`:
 
-**New file.** Simpler than the deck root — no SSR `head()` API, just renders an outlet.
+```typescript
+// Before
+{ id: "title", fileKey: "01-title", title: "Title Slide", shortTitle: "Title" },
+
+// After
+{ id: "title", fileKey: "01-title", title: "Title Slide", shortTitle: "Title", isExample: true },
+```
+
+Add a helper export after `TOTAL_SLIDES` (line 125):
+
+```typescript
+export const HAS_EXAMPLE_SLIDES = SLIDE_CONFIG.some((s) => s.isExample);
+```
+
+### 2. Welcome Screen Component
+
+**New file:** `src/builder/components/welcome-screen.tsx`
+
+A full-page welcome screen shown on first visit. Two CTAs:
+- **"Create Your Design System"** → navigates to `/builder/create-design-system`
+- **"Explore Example Deck"** → dismisses welcome, shows the grid
+
+Uses localStorage (`pls-fix-onboarding-complete`) for persistence, matching the existing pattern of `deck-panel-open` in `apps/builder/routes/builder/index.tsx`.
 
 ```tsx
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 
-export const Route = createRootRoute({
-  component: RootComponent,
-});
+const ONBOARDING_KEY = "pls-fix-onboarding-complete";
 
-function RootComponent() {
-  return <Outlet />;
-}
-```
-
-#### `apps/builder/routes/index.tsx` — Redirect to /builder/
-
-**New file.**
-
-```tsx
-import { createFileRoute, redirect } from "@tanstack/react-router";
-
-export const Route = createFileRoute("/")({
-  beforeLoad: () => {
-    throw redirect({ to: "/builder" });
-  },
-  component: () => null,
-});
-```
-
-#### `apps/builder/routes/builder/index.tsx` — Slide grid (moved)
-
-**Moved from** `src/routes/builder/index.tsx`. Content is identical — all imports resolve via `@/` which points to `../../src/`.
-
-#### `apps/builder/routes/builder/$fileKey.tsx` — Slide editor (moved)
-
-**Moved from** `src/routes/builder/$fileKey.tsx`. Content is identical.
-
-#### `apps/builder/routes/builder/designer.tsx` — Design system editor (moved)
-
-**Moved from** `src/routes/builder/designer.tsx`. Content is identical.
-
-#### `apps/builder/routes/builder/create-design-system.tsx` — Wizard (moved)
-
-**Moved from** `src/routes/builder/create-design-system.tsx`. Content is identical.
-
----
-
-### 2. Clean up deck app
-
-#### Delete `src/routes/builder/` directory
-
-Remove the entire directory. TanStack Router will regenerate `src/routeTree.gen.ts` without builder routes on next dev start.
-
-**Files deleted:**
-- `src/routes/builder/index.tsx`
-- `src/routes/builder/$fileKey.tsx`
-- `src/routes/builder/designer.tsx`
-- `src/routes/builder/create-design-system.tsx`
-
-#### Update `src/routes/deck/$slide.tsx` — Edit button links to external builder
-
-**Before:**
-```tsx
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
-// ...
-{import.meta.env.DEV && fileKey && (
-  <Link
-    to="/builder/$fileKey"
-    params={{ fileKey }}
-    className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-full shadow-lg hover:bg-neutral-700 transition-colors"
-  >
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-    Edit
-  </Link>
-)}
-```
-
-**After:**
-```tsx
-import { createFileRoute, redirect } from "@tanstack/react-router";
-// ...
-{import.meta.env.DEV && import.meta.env.VITE_BUILDER_URL && fileKey && (
-  <a
-    href={`${import.meta.env.VITE_BUILDER_URL}/builder/${fileKey}`}
-    className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-full shadow-lg hover:bg-neutral-700 transition-colors"
-  >
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-    Edit
-  </a>
-)}
-```
-
-The `VITE_BUILDER_URL` env var is set by the dev script. In production builds, both `import.meta.env.DEV` and `VITE_BUILDER_URL` are falsy, so this entire block is tree-shaken.
-
-#### Simplify `vite.config.ts` — Remove builder proxy
-
-**Before:**
-```ts
-server: {
-  watch: {
-    ignored: ["**/routeTree.gen.ts"],
-  },
-  proxy: process.env.BUILDER_PORT
-    ? {
-        "/api": {
-          target: `http://localhost:${process.env.BUILDER_PORT}`,
-          changeOrigin: true,
-        },
-      }
-    : undefined,
-},
-```
-
-**After:**
-```ts
-server: {
-  watch: {
-    ignored: ["**/routeTree.gen.ts"],
-  },
-},
-```
-
-The deck makes no API calls. The proxy was only needed because builder frontend code ran in the same Vite app.
-
----
-
-### 3. Update dev infrastructure
-
-#### `scripts/dev.ts` — Start three processes
-
-**Modified.** Adds builder Vite dev server as a third process, passes `VITE_BUILDER_URL` to the deck.
-
-```ts
-import { createServer } from "node:net";
-import { spawn, type ChildProcess } from "node:child_process";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { writeFileSync, unlinkSync } from "node:fs";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = resolve(__dirname, "..");
-const BUILDER_APP = resolve(PROJECT_ROOT, "apps/builder");
-const PORTS_FILE = resolve(PROJECT_ROOT, ".dev-ports");
-
-function findFreePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = createServer();
-    server.listen(0, () => {
-      const addr = server.address();
-      if (!addr || typeof addr === "string") {
-        reject(new Error("Failed to get port"));
-        return;
-      }
-      const port = addr.port;
-      server.close(() => resolve(port));
-    });
-    server.on("error", reject);
-  });
+export function hasCompletedOnboarding(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) === "true";
+  } catch {
+    return false;
+  }
 }
 
-async function main(): Promise<void> {
-  const deckPort = await findFreePort();
-  const builderVitePort = await findFreePort();
-  const builderApiPort = await findFreePort();
+export function completeOnboarding(): void {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, "true");
+  } catch {}
+}
 
-  const baseEnv = {
-    ...process.env,
-    BUILDER_PORT: String(builderApiPort),
+interface WelcomeScreenProps {
+  onComplete: () => void;
+}
+
+export function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
+  const navigate = useNavigate();
+
+  const handleCreateDesignSystem = () => {
+    completeOnboarding();
+    navigate({ to: "/builder/create-design-system" });
   };
 
-  writeFileSync(
-    PORTS_FILE,
-    JSON.stringify({
-      deck: deckPort,
-      builder: builderVitePort,
-      api: builderApiPort,
-    })
+  const handleExploreExamples = () => {
+    completeOnboarding();
+    onComplete();
+  };
+
+  return (
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-8">
+      <div className="max-w-lg w-full text-center space-y-8">
+        <div className="space-y-3">
+          <h1 className="text-2xl font-semibold text-neutral-900">
+            Welcome to pls-fix
+          </h1>
+          <p className="text-sm text-neutral-500 leading-relaxed">
+            Build beautiful slide decks with AI. Start by creating a design system
+            that defines your colors, typography, and visual personality — then
+            create slides that use it.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={handleCreateDesignSystem}
+            className="w-full px-6 py-3 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors"
+          >
+            Create Your Design System
+          </button>
+          <button
+            onClick={handleExploreExamples}
+            className="w-full px-6 py-3 border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50 transition-colors"
+          >
+            Explore Example Deck
+          </button>
+        </div>
+
+        <p className="text-xs text-neutral-400">
+          The example deck shows what's possible. You can clear it anytime and start fresh.
+        </p>
+      </div>
+    </div>
   );
+}
+```
 
-  const builderApi = spawn("tsx", ["scripts/builder-server.ts"], {
-    cwd: PROJECT_ROOT,
-    env: baseEnv,
-    stdio: "inherit",
-  });
+### 3. Builder Index: Onboarding Gate + Empty State + Clear Examples
 
-  const deck = spawn(
-    "npx",
-    ["vite", "dev", "--port", String(deckPort)],
-    {
-      cwd: PROJECT_ROOT,
-      env: {
-        ...baseEnv,
-        VITE_BUILDER_URL: `http://localhost:${builderVitePort}`,
-      },
-      stdio: "inherit",
-    }
-  );
+**File:** `apps/builder/routes/builder/index.tsx`
 
-  const builderVite = spawn(
-    "npx",
-    ["vite", "dev", "--port", String(builderVitePort)],
-    {
-      cwd: BUILDER_APP,
-      env: baseEnv,
-      stdio: "inherit",
-    }
-  );
+Three additions:
 
-  const children: ChildProcess[] = [builderApi, deck, builderVite];
+**A. Onboarding gate** — show `WelcomeScreen` if onboarding not completed:
 
-  function cleanup(): void {
-    for (const child of children) {
-      child.kill();
-    }
-    try {
-      unlinkSync(PORTS_FILE);
-    } catch {}
+```tsx
+// New imports
+import { WelcomeScreen, hasCompletedOnboarding } from "@/builder/components/welcome-screen";
+import { HAS_EXAMPLE_SLIDES } from "@/deck/config";
+import { useClearExamples } from "@/builder/hooks/use-clear-examples";
+
+function BuilderIndex() {
+  const [onboarded, setOnboarded] = useState(hasCompletedOnboarding);
+  // ... existing state ...
+  const { clearing, clearExamples } = useClearExamples();
+
+  if (!onboarded) {
+    return <WelcomeScreen onComplete={() => setOnboarded(true)} />;
   }
 
-  process.on("SIGINT", () => {
-    cleanup();
-    process.exit();
-  });
+  // ... existing render ...
+}
+```
 
-  process.on("SIGTERM", () => {
-    cleanup();
-    process.exit();
-  });
+**B. "Clear Examples" button** in header bar, between "Apply Design System" and the spacer:
 
-  for (const child of children) {
-    child.on("exit", (code) => {
-      if (code !== null && code !== 0) {
-        cleanup();
-        process.exit(code);
+```tsx
+{HAS_EXAMPLE_SLIDES && (
+  <button
+    onClick={() => {
+      if (confirm("Clear all example slides? This will remove all 18 example slides so you can start fresh. This is committed to git and can be reverted.")) {
+        clearExamples();
       }
-    });
-  }
+    }}
+    disabled={clearing}
+    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+  >
+    {clearing ? "Clearing..." : "Clear Examples"}
+  </button>
+)}
+```
+
+**C. Empty state** when `SLIDE_CONFIG.length === 0`, replacing the grid area inside the content div:
+
+```tsx
+{SLIDE_CONFIG.length === 0 ? (
+  <div className="flex flex-col items-center justify-center py-24 text-center">
+    <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="text-neutral-400">
+        <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    </div>
+    <h2 className="text-sm font-medium text-neutral-800 mb-1">No slides yet</h2>
+    <p className="text-xs text-neutral-500 mb-4 max-w-xs">
+      Create your first slide to get started.
+    </p>
+    <Link
+      to="/builder/$fileKey"
+      params={{ fileKey: "new" }}
+      className="px-4 py-2 bg-neutral-900 text-white text-xs font-medium rounded-lg hover:bg-neutral-800 transition-colors"
+    >
+      Create First Slide
+    </Link>
+  </div>
+) : isSelecting ? (
+  // existing selection grid...
+) : (
+  // existing SortableSlideGrid...
+)}
+```
+
+### 4. Example Badge on Slide Cards
+
+**File:** `src/builder/components/sortable-slide-card.tsx`
+
+Add a subtle "Example" badge in the card footer when `slide.isExample` is true. This touches both the non-management mode (Link wrapper, line 44-61) and management mode (div wrapper, line 64-125) renders:
+
+```tsx
+// Replace the info section in both modes:
+// Before (lines 52-58 non-management, 116-123 management):
+<div className="px-3 py-2.5">
+  <p className="text-sm font-medium text-neutral-800 truncate">
+    {slide.title}
+  </p>
+  <p className="text-xs text-neutral-400 mt-0.5">
+    {slide.fileKey}.tsx
+  </p>
+</div>
+
+// After:
+<div className="px-3 py-2.5">
+  <p className="text-sm font-medium text-neutral-800 truncate">
+    {slide.title}
+  </p>
+  <div className="flex items-center gap-1.5 mt-0.5">
+    <p className="text-xs text-neutral-400">
+      {slide.fileKey}.tsx
+    </p>
+    {slide.isExample && (
+      <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
+        Example
+      </span>
+    )}
+  </div>
+</div>
+```
+
+Also update the apply-design-system selection grid in `apps/builder/routes/builder/index.tsx` (lines 163-193) with the same badge pattern.
+
+### 5. Clear Examples API + Hook
+
+**File:** `scripts/builder-server.ts`
+
+New endpoint `POST /api/clear-examples` added before the 404 handler (before line 977). Performs direct file operations — no Claude subprocess needed since this is deterministic:
+
+1. Delete all `.tsx` files in `src/deck/slides/`
+2. Rewrite `config.ts` with empty loaders/config (preserving all function signatures)
+3. Git commit the change
+
+The endpoint writes a complete, valid `config.ts` with empty `slideLoaders` and `SLIDE_CONFIG_INTERNAL`, but preserves all function signatures so the app compiles with 0 slides.
+
+**New file:** `src/builder/hooks/use-clear-examples.ts`
+
+```typescript
+import { useState, useCallback } from "react";
+
+interface UseClearExamplesReturn {
+  clearing: boolean;
+  clearExamples: () => Promise<void>;
 }
 
-main();
-```
+export function useClearExamples(): UseClearExamplesReturn {
+  const [clearing, setClearing] = useState(false);
 
-#### Update `.dev-ports` format
+  const clearExamples = useCallback(async () => {
+    setClearing(true);
+    try {
+      const resp = await fetch("/api/clear-examples", { method: "POST" });
+      if (!resp.ok) throw new Error("Failed to clear examples");
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to clear examples:", err);
+      setClearing(false);
+    }
+  }, []);
 
-**Before:** `{ "vite": PORT, "builder": PORT }`
-**After:** `{ "deck": PORT, "builder": PORT, "api": PORT }`
-
-Where `deck` is the deck Vite port, `builder` is the builder Vite port, `api` is the builder API server port.
-
-#### Update `.gitignore` — Add builder route tree
-
-Add:
-```
-apps/builder/routeTree.gen.ts
-```
-
----
-
-### 4. Update package.json scripts
-
-**Before:**
-```json
-"scripts": {
-  "dev": "tsx scripts/dev.ts",
-  "build": "vite build",
-  "serve": "vite preview",
-  "preview": "pnpm run build && vite preview",
-  "deploy": "vite build && wrangler deploy"
+  return { clearing, clearExamples };
 }
 ```
 
-**After:**
-```json
-"scripts": {
-  "dev": "tsx scripts/dev.ts",
-  "dev:deck": "npx vite dev",
-  "build": "vite build",
-  "serve": "vite preview",
-  "preview": "pnpm run build && vite preview",
-  "deploy": "vite build && wrangler deploy"
+`window.location.reload()` is intentional — Vite HMR can't re-evaluate module-level exports in `config.ts` when the entire file is rewritten. A full reload is the simplest reliable approach.
+
+### 6. Wizard Completion: Post-Onboarding Options
+
+**File:** `src/builder/components/design-system-wizard.tsx`
+
+Modify the `complete` step (lines 795-824) to offer different paths depending on whether example slides exist:
+
+```tsx
+// Add imports at top
+import { HAS_EXAMPLE_SLIDES } from "@/deck/config";
+import { useClearExamples } from "../hooks/use-clear-examples";
+
+// Inside DesignSystemWizard():
+const { clearing, clearExamples } = useClearExamples();
+
+const handleStartFresh = async () => {
+  await clearExamples();
+};
+
+// Replace the complete step buttons (lines 809-823):
+{step === "complete" && (
+  <div className="space-y-6 mt-8 text-center">
+    {/* existing checkmark + title + description */}
+    <div className="flex gap-3 justify-center">
+      <button
+        onClick={() => navigate({ to: "/builder/designer" })}
+        className="px-6 py-2.5 border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50 transition-colors"
+      >
+        Preview Design System
+      </button>
+      {HAS_EXAMPLE_SLIDES ? (
+        <>
+          <button
+            onClick={handleStartFresh}
+            disabled={clearing}
+            className="px-6 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50"
+          >
+            {clearing ? "Clearing..." : "Start Fresh"}
+          </button>
+          <button
+            onClick={() => navigate({ to: "/builder" })}
+            className="px-6 py-2.5 border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50 transition-colors"
+          >
+            Keep Examples
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={() => navigate({ to: "/builder" })}
+          className="px-6 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors"
+        >
+          Start Adding Slides
+        </button>
+      )}
+    </div>
+  </div>
+)}
+```
+
+### 7. Deck Viewer: Handle Empty Deck
+
+**File:** `src/routes/deck/$slide.tsx`
+
+Add guard for when `TOTAL_SLIDES === 0`. The current redirect to slide 1 would render nothing useful:
+
+```tsx
+if (TOTAL_SLIDES === 0) {
+  return (
+    <div className="h-screen flex items-center justify-center bg-neutral-900 text-white">
+      <p className="text-sm text-neutral-400">
+        No slides yet. Open the builder to get started.
+      </p>
+    </div>
+  );
 }
 ```
 
-`dev:deck` is a convenience for starting just the deck without the builder (e.g., for production preview). The main `dev` command starts everything.
+**Files:** `src/routes/index.tsx` and `src/routes/deck/index.tsx`
 
----
-
-### 5. Add Vite env type declaration
-
-**New file:** `src/vite-env.d.ts` (or update existing)
-
-Declare the `VITE_BUILDER_URL` env var for TypeScript:
-
-```ts
-/// <reference types="vite/client" />
-
-interface ImportMetaEnv {
-  readonly VITE_BUILDER_URL?: string;
-}
-```
-
----
+These redirects assume at least 1 slide exists. Add a guard so they don't redirect to `/deck/1` when `TOTAL_SLIDES === 0`.
 
 ## Considerations
 
-### Bundle size improvement
-Builder-only dependencies that no longer ship to production:
-- `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` (drag-and-drop)
-- `konva`, `react-konva` (wireframe canvas)
-- `html-to-image` (thumbnail capture)
-- `react-grab` (element selection)
-- `maplibre-gl` (if only used in builder previews — check if any deployed slides use it)
-- All 40+ files in `src/builder/`
+- **localStorage for onboarding state**: Doesn't survive across machines, but this is a dev-only tool running locally. If someone clones a fresh repo on a new machine, they'll see onboarding again — correct behavior.
 
-These still need to be in `dependencies` (not `devDependencies`) because the builder Vite app imports them at dev time and Vite needs to resolve them. But they're tree-shaken out of the deck's production build since no deck code imports them.
+- **`isExample` in config.ts**: Skills that create new slides (add-slide, remove-slide, reorder-slide) don't set `isExample`, so new slides default to `undefined` (falsy). No skill changes needed.
 
-### Route type safety
-Both apps generate separate `routeTree.gen.ts` files that augment `@tanstack/react-router`. TypeScript merges both augmentations, so both apps see a superset of routes. This is harmless — the deck never links to builder routes (uses `<a>` not `<Link>`), and the builder never links to deck routes.
+- **Clear examples is destructive**: Committed to git, recoverable via `git revert`. The UI confirms before clearing. The git status indicator in the header will show the commit.
 
-### HMR across apps
-Both Vite instances independently watch `src/`. When a slide file changes:
-- The deck's HMR updates the presentation view
-- The builder's HMR updates the preview and triggers `useSlidePreview`'s version bump
+- **`window.location.reload()` after clearing**: Vite HMR can handle individual file changes, but a full config.ts rewrite with all imports removed needs a fresh module evaluation. Reload is simplest.
 
-The builder server (`scripts/builder-server.ts`) is unchanged — it spawns Claude processes that edit `src/deck/slides/` files directly. Both Vite instances pick up the changes.
+- **No production impact**: `isExample`, `HAS_EXAMPLE_SLIDES`, onboarding gate, clear-examples API — all of this lives in builder-only code. The deployed deck is unaffected.
 
-### Cloudflare Workers deploy
-Unchanged. `wrangler.jsonc` points to `src/entry.ts`, which uses TanStack Start's server entry, which uses the deck-only route tree. Builder code is completely absent from the production bundle.
-
-### The builder routes keep the `/builder/` prefix
-The builder app's routes are nested under `routes/builder/` to preserve the exact URL paths (`/builder/`, `/builder/$fileKey`, etc.). This means zero changes to `<Link>` calls in `src/builder/` components — they all already use `to="/builder/..."` patterns and continue to work.
-
-### `@tanstack/router-plugin` is already a dependency
-Looking at `package.json`, `@tanstack/router-plugin` is already listed (it's used by `@tanstack/react-start` internally). The builder's Vite config imports `TanStackRouterVite` from it directly — no new dependency needed.
-
-### CLAUDE.md updates needed
-The Playwright/browser preview section references `.dev-ports` format and port names. This needs updating to reflect the new `{ deck, builder, api }` format.
+- **The empty config.ts template**: The clear-examples endpoint writes a complete, valid `config.ts` with all function signatures preserved. This ensures the deck viewer still compiles even with 0 slides.
 
 ## Tasks
 
-### Phase 1: Create builder app shell
-- [x] Create `apps/builder/` directory
-- [x] Create `apps/builder/index.html`
-- [x] Create `apps/builder/main.tsx`
-- [x] Create `apps/builder/router.tsx`
-- [x] Create `apps/builder/vite.config.ts`
-- [x] Create `apps/builder/tsconfig.json`
-- [x] Create `apps/builder/routes/__root.tsx`
-- [x] Create `apps/builder/routes/index.tsx`
-- [x] Move `src/routes/builder/index.tsx` → `apps/builder/routes/builder/index.tsx`
-- [x] Move `src/routes/builder/$fileKey.tsx` → `apps/builder/routes/builder/$fileKey.tsx`
-- [x] Move `src/routes/builder/designer.tsx` → `apps/builder/routes/builder/designer.tsx`
-- [x] Move `src/routes/builder/create-design-system.tsx` → `apps/builder/routes/builder/create-design-system.tsx`
-- [x] Verify builder app starts: `cd apps/builder && BUILDER_PORT=3333 npx vite dev`
+### Phase 1: Data Model
 
-### Phase 2: Clean up deck app
-- [x] Delete `src/routes/builder/` directory
-- [x] Update `src/routes/deck/$slide.tsx` — replace `<Link>` with `<a>` for Edit button
-- [x] Remove `Link` import if no longer used
-- [x] Remove builder proxy from `vite.config.ts`
-- [x] Add `src/vite-env.d.ts` with `VITE_BUILDER_URL` type
-- [x] Verify deck starts standalone: `npx vite dev`
-- [x] Verify `pnpm build` succeeds with no builder code in output
+- [x] Add `isExample?: boolean` to `SlideConfig` interface in `src/deck/config.ts`
+- [x] Add `isExample: true` to all 18 entries in `SLIDE_CONFIG_INTERNAL`
+- [x] Add `HAS_EXAMPLE_SLIDES` export to `src/deck/config.ts`
 
-### Phase 3: Update dev infrastructure
-- [x] Rewrite `scripts/dev.ts` to start three processes
-- [x] Update `.dev-ports` format to `{ deck, builder, api }`
-- [x] Update `.gitignore` with `apps/builder/routeTree.gen.ts`
-- [x] Update `package.json` scripts
-- [x] Verify `pnpm dev` starts all three processes
-- [x] Verify builder preview works (renders slides, HMR updates)
-- [x] Verify builder API works (edit slide via chat, see changes)
-- [x] Verify Edit button on deck links to builder
+### Phase 2: Welcome Screen
 
-### Phase 4: Update documentation
-- [x] Update CLAUDE.md — new port format, new dev commands, updated project structure
-- [x] Update Playwright/browser preview instructions in CLAUDE.md
+- [x] Create `src/builder/components/welcome-screen.tsx` with onboarding state helpers + `WelcomeScreen` component
+- [x] Wire into `apps/builder/routes/builder/index.tsx` — show welcome screen when not onboarded
+
+### Phase 3: Example Badge + Grid Updates
+
+- [x] Add "Example" badge to `src/builder/components/sortable-slide-card.tsx` (both render modes)
+- [x] Add "Example" badge to apply-design-system selection grid in `apps/builder/routes/builder/index.tsx`
+- [x] Add empty state to grid area when `SLIDE_CONFIG.length === 0`
+- [x] Add "Clear Examples" button to header bar when `HAS_EXAMPLE_SLIDES`
+
+### Phase 4: Clear Examples Backend
+
+- [x] Add `POST /api/clear-examples` endpoint to `scripts/builder-server.ts`
+- [x] Create `src/builder/hooks/use-clear-examples.ts` hook
+- [x] Wire "Clear Examples" button with confirmation dialog in builder index
+
+### Phase 5: Wizard Completion Integration
+
+- [x] Modify wizard `complete` step in `design-system-wizard.tsx` — "Start Fresh" vs "Keep Examples"
+- [x] Wire "Start Fresh" to clear-examples hook
+
+### Phase 6: Edge Cases
+
+- [x] Handle empty deck in `src/routes/deck/$slide.tsx`
+- [x] Handle empty deck in deck redirects (`src/routes/index.tsx`, `src/routes/deck/index.tsx`)
+- [x] Verify `pnpm build` passes with empty config
 
 ---
 

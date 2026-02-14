@@ -53,9 +53,16 @@ export function SortableSlideCard({
           <p className="text-sm font-medium text-neutral-800 truncate">
             {slide.title}
           </p>
-          <p className="text-xs text-neutral-400 mt-0.5">
-            {slide.fileKey}.tsx
-          </p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <p className="text-xs text-neutral-400">
+              {slide.fileKey}.tsx
+            </p>
+            {slide.isExample && (
+              <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
+                Example
+              </span>
+            )}
+          </div>
         </div>
       </Link>
     );
@@ -117,9 +124,16 @@ export function SortableSlideCard({
         <p className="text-sm font-medium text-neutral-800 truncate">
           {slide.title}
         </p>
-        <p className="text-xs text-neutral-400 mt-0.5">
-          {slide.fileKey}.tsx
-        </p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="text-xs text-neutral-400">
+            {slide.fileKey}.tsx
+          </p>
+          {slide.isExample && (
+            <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
+              Example
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
