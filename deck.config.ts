@@ -1,6 +1,6 @@
 export const deckConfig = {
   title: "My Presentation",
-  subtitle: "A Vibe Decks Template",
+  subtitle: "A pls-fix Template",
 
   auth: {
     enabled: false,

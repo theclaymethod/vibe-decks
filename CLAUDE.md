@@ -1,4 +1,4 @@
-# Vibe Decks - Claude Code Instructions
+# pls-fix - Claude Code Instructions
 
 This is a slide deck template system designed to be built and customized with Claude Code.
 
@@ -15,7 +15,7 @@ This is a slide deck template system designed to be built and customized with Cl
 ## Project Structure
 
 ```
-vibe-decks/
+pls-fix/
 ├── src/                          # SHARED source (both apps import via @/)
 │   ├── deck/                     # YOUR DECK CONTENT
 │   │   ├── config.ts             # Slide registry (imports + SLIDE_CONFIG)

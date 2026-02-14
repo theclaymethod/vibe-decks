@@ -1,12 +1,12 @@
-# Vibe Decks
+# pls-fix
 
 Talk to your slides. An AI-native presentation system where you describe what you want and get pixel-perfect results.
 
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/theclaymethod/vibe-decks)
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/theclaymethod/pls-fix)
 
 > [!WARNING]
-> **Experimental software.** Vibe Decks is under active development and requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and comfort with React/TypeScript. Expect breaking changes and workflows that assume technical users.
+> **Experimental software.** pls-fix is under active development and requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and comfort with React/TypeScript. Expect breaking changes and workflows that assume technical users.
 
 ![Builder UI](builder-chat-v2.png)
 
@@ -50,8 +50,8 @@ You ──→ Builder UI ──→ Builder Server ──→ Claude CLI ──→
 ## Quick Start
 
 ```bash
-git clone https://github.com/theclaymethod/vibe-decks.git
-cd vibe-decks
+git clone https://github.com/theclaymethod/pls-fix.git
+cd pls-fix
 pnpm install
 pnpm dev
 ```
@@ -59,7 +59,7 @@ pnpm dev
 `pnpm dev` starts three processes and prints:
 
 ```
-  Vibe Decks
+  pls-fix
 
   ➜  Deck:    http://localhost:53787/
   ➜  Builder: http://localhost:53788/
@@ -191,7 +191,7 @@ Register in `src/deck/config.ts` and it appears in the deck.
 ## Architecture
 
 ```
-vibe-decks/
+pls-fix/
 ├── src/                            # Shared source (both apps import via @/)
 │   ├── deck/                       # YOUR DECK CONTENT
 │   │   ├── config.ts               # Slide registry
@@ -337,7 +337,7 @@ The builder server writes files directly to disk. Vite HMR should pick up change
 **Claude CLI errors in builder**
 The builder server spawns `claude` as a subprocess. Ensure Claude Code is installed and authenticated. Check the terminal for builder server logs.
 
-For other issues, [open a GitHub issue](https://github.com/theclaymethod/vibe-decks/issues).
+For other issues, [open a GitHub issue](https://github.com/theclaymethod/pls-fix/issues).
 
 ---
 
