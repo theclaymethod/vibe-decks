@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { DeckLayout } from "@/core";
 import { getSlideComponent, preloadSlide, SLIDES_NAV, SLIDE_CONFIG, TOTAL_SLIDES } from "@/deck/config";
@@ -37,17 +37,16 @@ function SlideRoute() {
       >
         <SlideComponent />
       </Suspense>
-      {import.meta.env.DEV && fileKey && (
-        <Link
-          to="/builder/$fileKey"
-          params={{ fileKey }}
+      {import.meta.env.DEV && import.meta.env.VITE_BUILDER_URL && fileKey && (
+        <a
+          href={`${import.meta.env.VITE_BUILDER_URL}/builder/${fileKey}`}
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-full shadow-lg hover:bg-neutral-700 transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           Edit
-        </Link>
+        </a>
       )}
     </DeckLayout>
   );

@@ -19,14 +19,6 @@ const config = defineConfig({
     watch: {
       ignored: ["**/routeTree.gen.ts"],
     },
-    proxy: process.env.BUILDER_PORT
-      ? {
-          "/api": {
-            target: `http://localhost:${process.env.BUILDER_PORT}`,
-            changeOrigin: true,
-          },
-        }
-      : undefined,
   },
   build: {
     minify: "esbuild",

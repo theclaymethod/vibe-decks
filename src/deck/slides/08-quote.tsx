@@ -5,16 +5,18 @@ function QuotePanel({
   attribution,
   imageUrl,
   delay = 0,
+  grayscale = true,
 }: {
   quote: string;
   attribution: string;
   imageUrl: string;
   delay?: number;
+  grayscale?: boolean;
 }) {
   return (
     <AnimatedEntry variant="slideUp" delay={delay} className="group relative flex-1 overflow-hidden cursor-pointer">
       <div
-        className="absolute inset-0 bg-cover bg-center transition-all duration-700 grayscale group-hover:grayscale-0"
+        className={`absolute inset-0 bg-cover bg-center transition-all duration-700 ${grayscale ? "grayscale group-hover:grayscale-0" : ""}`}
         style={{ backgroundImage: `url('${imageUrl}')` }}
       />
       <div className="absolute inset-0 bg-black/60 transition-colors duration-500 group-hover:bg-black/40" />
@@ -43,6 +45,7 @@ export function Slide08Quote() {
           attribution="Jane Smith, Lead Engineer at Acme"
           imageUrl="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&q=80"
           delay={0.15}
+          grayscale={false}
         />
       </div>
     </SlideContainer>

@@ -16,20 +16,31 @@ This is a slide deck template system designed to be built and customized with Cl
 
 ```
 vibe-decks/
-├── src/
-│   ├── deck/                   # YOUR DECK CONTENT
-│   │   ├── config.ts           # Slide registry (imports + SLIDE_CONFIG)
-│   │   ├── theme.css           # CSS variables for colors/fonts
-│   │   └── slides/             # Individual slide files
+├── src/                          # SHARED source (both apps import via @/)
+│   ├── deck/                     # YOUR DECK CONTENT
+│   │   ├── config.ts             # Slide registry (imports + SLIDE_CONFIG)
+│   │   ├── theme.css             # CSS variables for colors/fonts
+│   │   └── slides/               # Individual slide files
 │   │       ├── 01-title.tsx
 │   │       ├── 02-intro.tsx
 │   │       └── ...
-│   ├── templates/              # 21 pre-built slide templates
-│   ├── design-system/          # Base UI components
-│   ├── core/                   # Infrastructure (navigation, scaling)
-│   └── routes/                 # TanStack Router pages
-├── deck.config.ts              # Top-level config (auth, dimensions)
-└── .claude/skills/             # Claude Code skills for slide management
+│   ├── templates/                # 21 pre-built slide templates
+│   ├── design-system/            # Base UI components
+│   ├── builder/                  # Builder components + hooks
+│   ├── core/                     # Infrastructure (navigation, scaling)
+│   └── routes/                   # DECK routes only (TanStack Start, SSR)
+├── apps/
+│   └── builder/                  # BUILDER app (dev-only SPA, no SSR)
+│       ├── index.html            # SPA entry point
+│       ├── main.tsx              # React bootstrap
+│       ├── router.tsx            # TanStack Router (client-only)
+│       ├── vite.config.ts        # Builder Vite config
+│       └── routes/               # Builder routes (TanStack Router)
+├── scripts/
+│   ├── dev.ts                    # Starts deck + builder + API server
+│   └── builder-server.ts         # Claude proxy for builder API
+├── deck.config.ts                # Top-level config (auth, dimensions)
+└── .claude/skills/               # Claude Code skills for slide management
 ```
 
 ## Key Files
@@ -150,25 +161,26 @@ auth: { enabled: true, password: "your-password" }
 
 ```bash
 pnpm install    # Install dependencies
-pnpm dev        # Start dev server (localhost:5173)
-pnpm build      # Build for production
+pnpm dev        # Start all dev servers (deck + builder + API)
+pnpm dev:deck   # Start deck Vite only (no builder)
+pnpm build      # Build deck for production (no builder code)
 pnpm preview    # Preview production build
 ```
 
-Deploys to Cloudflare Workers via the deploy button or `wrangler deploy`.
+Deploys to Cloudflare Workers via the deploy button or `wrangler deploy`. Only the deck is deployed — the builder is a dev-only tool.
 
 ## Playwright / Browser Preview
 
-The dev server port is **dynamic** (supports multiple worktrees). `pnpm dev` writes the port to `.dev-ports` in the project root:
+The dev server ports are **dynamic** (supports multiple worktrees). `pnpm dev` writes ports to `.dev-ports` in the project root:
 ```json
-{ "vite": 51234, "builder": 51235 }
+{ "deck": 51234, "builder": 51235, "api": 51236 }
 ```
 
-**Before using Playwright MCP**, read `.dev-ports` to get the Vite port, then navigate to:
-- Presentation view: `http://localhost:{vitePort}/deck/{slideNumber}` (1-indexed)
-- Builder/editor view: `http://localhost:{vitePort}/builder/{fileKey}` (e.g., `01-title`)
-- All slides grid: `http://localhost:{vitePort}/builder`
-- Design system: `http://localhost:{vitePort}/builder/designer`
+**Before using Playwright MCP**, read `.dev-ports` to get the correct ports, then navigate to:
+- Presentation view: `http://localhost:{deck}/deck/{slideNumber}` (1-indexed)
+- Builder/editor view: `http://localhost:{builder}/builder/{fileKey}` (e.g., `01-title`)
+- All slides grid: `http://localhost:{builder}/builder`
+- Design system: `http://localhost:{builder}/builder/designer`
 
 ## Conventions
 

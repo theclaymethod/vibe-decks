@@ -5,6 +5,7 @@
   "description": "A reusable slide deck template system built with TanStack Router",
   "scripts": {
     "dev": "tsx scripts/dev.ts",
+    "dev:deck": "npx vite dev",
     "build": "vite build",
     "serve": "vite preview",
     "preview": "pnpm run build && vite preview",
