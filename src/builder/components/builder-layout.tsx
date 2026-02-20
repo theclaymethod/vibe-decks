@@ -20,6 +20,7 @@ import { GenerationOutput } from "./generation-output";
 import { SlidePreview } from "./slide-preview";
 import { EditSidebar } from "./edit-sidebar";
 import { GitStatusIndicator } from "./git-status-indicator";
+import { usePdfExport } from "../hooks/use-pdf-export";
 
 interface BuilderLayoutProps {
   fileKey: string;
@@ -234,6 +235,7 @@ function EditView({ fileKey }: { fileKey: string }) {
   });
 
   const { upload: uploadAsset } = useAssets();
+  const pdfExport = usePdfExport();
 
   const generation = useGeneration();
   const { edit: editSlideViaChat } = generation;
@@ -373,6 +375,34 @@ function EditView({ fileKey }: { fileKey: string }) {
 
         <div className="ml-auto flex items-center gap-1">
           <GitStatusIndicator />
+          <button
+            onClick={pdfExport.isExporting ? pdfExport.cancel : pdfExport.exportPdf}
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-colors",
+              pdfExport.isExporting
+                ? "text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                : "text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100"
+            )}
+          >
+            {pdfExport.isExporting ? (
+              <>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="animate-spin">
+                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="28 10" />
+                </svg>
+                <span className="text-xs font-medium tabular-nums">
+                  {pdfExport.progress?.current}/{pdfExport.progress?.total}
+                </span>
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3 11v2a1 1 0 001 1h8a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="text-xs font-medium">PDF</span>
+              </>
+            )}
+          </button>
           <button
             onClick={() => setAssetBrowserOpen(true)}
             className="flex items-center gap-1.5 px-2 py-1.5 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-md transition-colors"
