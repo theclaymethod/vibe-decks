@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "pls-fix",
+  "name": "vibe-decks",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/entry.ts",
